@@ -1,11 +1,11 @@
 <div align="center">
 
 # 🛡️ SENTINEL
-### High-Throughput CCTV Registry, PostGIS Spatial Intelligence & Policy-Bound Threat Response
+### Unified State-Wide CCTV Asset Registry, PostGIS Spatial Intelligence & Policy-Bound Threat Response
 
-[![Gujarat Police Hackathon 2026](https://img.shields.io/badge/Event-Gujarat%20Police%20Innovation%20Hackathon%202026-0D47A1?style=for-the-badge&logo=shield)](https://sentinel.gujarat.gov.in)
-[![Track](https://img.shields.io/badge/Track-Model%205%20(Hybrid%20%2F%20Novel)-4A148C?style=for-the-badge)](docs/superpowers/specs/2026-09-04-sentinel-design.md)
-[![Status](https://img.shields.io/badge/Status-Production%20Ready-00796B?style=for-the-badge)]()
+[![Architecture](https://img.shields.io/badge/Architecture-Dual--Tier%20Deterministic-0D47A1?style=for-the-badge&logo=shield)]()
+[![Specification](https://img.shields.io/badge/Specification-Model%201%20%2B%20Model%205%20Standard-4A148C?style=for-the-badge)]()
+[![Operational Grade](https://img.shields.io/badge/Deployment-State--Wide%20Scale-00796B?style=for-the-badge)]()
 
 [![Python](https://img.shields.io/badge/Python-3.12%2B-3776AB?style=flat-square&logo=python&logoColor=white)](https://python.org)
 [![FastAPI](https://img.shields.io/badge/FastAPI-0.115%2B-009688?style=flat-square&logo=fastapi&logoColor=white)](https://fastapi.tiangolo.com)
@@ -14,42 +14,44 @@
 [![Leaflet](https://img.shields.io/badge/Leaflet-1.9.4-199900?style=flat-square&logo=leaflet&logoColor=white)](https://leafletjs.com)
 [![Vite](https://img.shields.io/badge/Vite-6.0-646CFF?style=flat-square&logo=vite&logoColor=white)](https://vitejs.dev)
 [![Tests](https://img.shields.io/badge/Tests-52%20Passing%20(46%20Pytest%20%7C%206%20Vitest)-brightgreen?style=flat-square&logo=pytest&logoColor=white)]()
-[![License](https://img.shields.io/badge/License-Apache%202.0-blue?style=flat-square)]()
+[![License](https://img.shields.io/badge/License-Apache%202.0-blue?style=flat-square)](LICENSE)
 
 <p align="center">
-  <strong>A deterministic, sub-400ms surveillance and asset intelligence platform engineered for state-wide law enforcement.</strong><br>
-  Built on a mandatory PostGIS central registry, zero-model mathematical stream integrity forensics, and a cryptographically chained audit trail.
+  <strong>A deterministic, sub-400ms surveillance asset intelligence and automated interdiction platform engineered for state-level law enforcement.</strong><br>
+  Federating multi-department CCTV networks into an authoritative PostGIS spatial registry with inline stream integrity forensics and a cryptographically chained audit trail.
 </p>
 
 [System Architecture](#-system-architecture) •
-[Key Capabilities](#-key-capabilities) •
+[Core Capabilities](#-core-capabilities) •
 [Latency Budget](#-deterministic-latency-budget-400ms) •
-[Quickstart](#-quickstart-guide) •
+[Quickstart Guide](#-quickstart-guide) •
 [API Reference](#-api-endpoints) •
-[Verification](#-testing--quality-gates)
+[Verification & Quality](#-testing--quality-gates) •
+[Compliance Matrix](#-operational-standards--specification-compliance)
 
 ---
 
 </div>
 
-## 📌 Executive Summary
+## 📌 Executive Overview
 
-Modern urban surveillance across police departments faces three crippling bottlenecks:
-1. **Siloed & Incomplete Inventories:** Camera assets are scattered across dozens of municipal bodies in conflicting Excel sheets, with unverified RTSP streams and undocumented operational blind spots.
-2. **Compute-Heavy Brittle Analytics:** Processing 25 FPS video feeds through monolithic AI pipelines burns millions in server infrastructure while risking hallucinated detections and multi-second alerting lags.
-3. **Legal Fragility & Feed Vulnerability:** Camera feeds can be sabotaged, frozen, or replayed using low-cost MITM hardware, and control room actions frequently lack a tamper-evident chain of custody required for courtroom admissibility.
+State-level public safety operations manage tens of thousands of video feeds spanning police departments, municipal corporations, smart city projects, transport authorities, and toll operators. Today, this infrastructure suffers from critical structural vulnerabilities:
 
-**Sentinel** eliminates these vulnerabilities with an uncompromising **two-tier architecture**:
-* **Deterministic Fast Tier (<400ms, Zero LLM):** 2 FPS stream decimation, TensorRT ANPR (LPDNet + LPRNet), pure NumPy perceptual stream forensics (detecting frozen, looped, or covered feeds in 5ms), and indexed PostGIS tracking (`GROUP BY plate ORDER BY ts`).
-* **Governed Policy & Immutable Audit:** State-machine response boundaries (`Normal`, `Festival`, `Curfew`) governing auto-escalation, backed by an append-only **SHA-256 hash-chained cryptographic ledger** (`hash = SHA256(prev_hash + payload)`).
-* **Asynchronous Bounded Agents:** Schema-mapping agents to normalize arbitrary departmental CSVs, natural-language to read-only SQL compilation, and automated incident briefing.
+1. **Fragmented & Stale Inventory:** Camera metadata remains trapped in inconsistent departmental spreadsheets with unverified RTSP endpoints and undocumented surveillance blackspots.
+2. **Compute Bottlenecks & Detection Lag:** Ingesting 25 FPS video feeds into monolithic AI stacks creates multi-second alerting delays, high false-alarm rates, and unsustainable server operational costs.
+3. **Stream Tampering & Evidentiary Vulnerability:** Camera feeds can be sabotaged, frozen, or intercepted via unauthorized hardware. Automated control-room escalations routinely lack the tamper-evident chain of custody required for court admissibility.
+
+**Sentinel** resolves these operational challenges through a **dual-tier architecture**:
+* **Deterministic Fast Tier (<400ms, Zero LLM):** Stream decimation to 2 FPS cuts GPU load by ~92%. Lightweight TensorRT ANPR (LPDNet + LPRNet) detects and reads plates in under 40ms. Simultaneously, an inline NumPy forensic engine checks stream integrity (frozen, looped, occluded, or substituted feeds) in under 5ms without neural network overhead. Cross-camera vehicle routes and watchlist hits resolve via indexed PostGIS/PostgreSQL queries (`GROUP BY plate ORDER BY ts`).
+* **Governed Policy & Immutable Audit:** State-machine response boundaries (`Normal`, `Festival`, `Curfew`) govern automated camera escalations. Every action, alert dispatch, and operator override is recorded in an append-only **SHA-256 hash-chained cryptographic ledger** ensuring judicial non-repudiation under digital evidence standards.
+* **Asynchronous Bounded Agents:** Schema-mapping agents normalize heterogeneous departmental CSV/Excel inventories, compile operator natural-language queries into read-only SQL, and generate standardized incident briefs.
 
 ---
 
 ## 🏛️ System Architecture
 
 ```
-                                [ ~50 RTSP Department Feeds ]
+                               [ ~50 Departmental RTSP Feeds ]
                                               │
                                               ▼
                              ┌─────────────────────────────────┐
@@ -102,43 +104,43 @@ Modern urban surveillance across police departments faces three crippling bottle
 
 ## ⚡ Deterministic Latency Budget (<400ms)
 
-Real-time interception demands predictable, hard real-time latency bounds. Every stage on the critical path is deterministic:
+Real-time crime interception requires strict upper-bound latency guarantees. Every step on Sentinel's operational path is deterministic:
 
 | Pipeline Stage | Upper Bound | Implementation Mechanism |
 |---|:---:|---|
 | **RTSP Ingest ➔ Frame Decimation** | `200 ms` | MediaMTX RTSP demuxer + FFmpeg decimation at 2 FPS |
-| **Vehicle Plate Detect (LPDNet)** | `25 ms` | NVIDIA TensorRT FP16, batch size 8 |
+| **Vehicle Plate Detection (LPDNet)** | `25 ms` | NVIDIA TensorRT FP16, batch size 8 |
 | **Plate Character OCR (LPRNet)** | `15 ms` | NVIDIA TensorRT FP16 |
 | **Mathematical Feed Fingerprint** | `5 ms` | In-memory NumPy array statistics on decoded buffer |
 | **Relational Match & Sighting Write** | `20 ms` | B-Tree index scan on `watchlist(plate)` & SQL insert |
 | **Policy State Machine Evaluation** | `10 ms` | In-process Python rules table (zero external I/O) |
 | **PostgreSQL NOTIFY ➔ WebSocket UI** | `100 ms` | Native PostgreSQL `LISTEN`/`NOTIFY` broadcast |
-| **TOTAL (Sighting ➔ Operator Alert)** | **`< 375 ms`** | **Guaranteed Sub-400ms Live Tactical Alert Loop** |
+| **TOTAL (Sighting ➔ Operator Alert)** | **`< 375 ms`** | **Sub-400ms Real-Time Tactical Interdiction Loop** |
 
 > [!NOTE]
-> The Agent Tier (LLMs/VLMs) operates **strictly outside** this budget. Heavy AI models never gate or block an operational alert.
+> The Agent Tier (LLMs/VLMs) operates **strictly outside** this budget. Heavy AI models never gate, block, or delay an operational alert.
 
 ---
 
-## 💎 Key Capabilities
+## 💎 Core Capabilities
 
-### 1. Centralised GIS Registry & Spatial Gap Analysis (Model 1)
-* **High-Precision PostGIS Storage:** Stores camera coordinates as native `geography(Point, 4326)`.
-* **Algorithmic Blind-Spot Detection:** Computes urban coverage voids using `ST_SquareGrid` and `ST_DWithin` calculated in meters (EPSG:3857), instantly pinpointing unmonitored intersections and streets without manual field audits.
-* **Resilient CSV Ingestion:** Bulk uploads heterogeneous department spreadsheets with per-row atomic savepoints (`SAVEPOINT row_sp`)—one bad coordinate reports a structured error without rolling back 5,000 valid cameras.
+### 1. Centralised PostGIS Registry & Spatial Gap Discovery
+* **High-Precision PostGIS Storage:** Stores camera coordinates as native `geography(Point, 4326)` with spatial GiST indexing.
+* **Algorithmic Blind-Spot Auditing:** Computes surveillance coverage voids using `ST_SquareGrid` and `ST_DWithin` calculated in meters (EPSG:3857), instantly generating blind-spot heatmaps across municipal sectors without physical surveys.
+* **Fault-Tolerant CSV Bulk Ingestion:** Ingests department inventories using per-row database savepoints (`SAVEPOINT row_sp`)—a single malformed row reports an explicit diagnostic error while all valid records commit successfully.
 
-### 2. Zero-Model Feed Integrity Forensics (Patent Novelty)
-Rather than executing compute-heavy visual anomaly networks, Sentinel performs mathematical checks directly on decoded memory buffers:
-* **Perceptual Hamming Distance:** Identifies frozen or stalled camera streams.
-* **Temporal Autocorrelation:** Exposes cyclic video loop replay attacks within 3 frames.
-* **Histogram Entropy Collapse:** Detects camera spray-painting, lens obscuration, or severe sensor blinding.
+### 2. Zero-Model Stream Integrity Forensics
+Rather than executing compute-heavy visual anomaly models, Sentinel validates streams mathematically directly on decoded memory buffers:
+* **Perceptual Hamming Distance:** Identifies frozen video or crashed camera encoders.
+* **Temporal Autocorrelation:** Exposes cyclic video loop injection attacks within 3 frames.
+* **Histogram Entropy Collapse:** Detects spray-painting, lens obscuration, or severe physical tampering.
 * **Sensor Noise Residual Drift:** Catches unauthorized stream splicing, MITM feed substitution, and synthetic video injection.
 
-### 3. Policy-Bound Autonomy & Cryptographic Audit
-* **Operational Profiles:** Define explicit permissions under `Normal`, `Festival`, or `Curfew` regimes. Autonomous actions (e.g., locking PTZ cameras onto a getaway route) require human authorization if they exceed the zone's profile.
-* **SHA-256 Tamper-Evident Ledger:** Every system action, configuration modification, and manual override appends a cryptographic link:
+### 3. Policy-Bound Autonomy & Cryptographic Audit Ledger
+* **Operational Boundary State Machines:** Declarative profiles (`Normal`, `Festival`, `Curfew`) dictate what the system may execute autonomously (PTZ track lock, stream quality escalation, geofenced alerts). Actions beyond the active profile require explicit operator confirmation.
+* **SHA-256 Tamper-Evident Ledger:** Every system action, policy escalation, and manual override appends a cryptographic hash link:
   $$\text{hash}_n = \text{SHA-256}(\text{hash}_{n-1} \parallel \text{timestamp} \parallel \text{actor} \parallel \text{payload})$$
-  Ensures compliance with Section 65B of the Indian Evidence Act / Bharatiya Sakshya Adhiniyam for courtroom admissibility.
+  Guarantees an unbroken chain of custody admissible under digital evidence statutes (e.g., Section 65B of the Indian Evidence Act / Bharatiya Sakshya Adhiniyam).
 
 ### 4. Enterprise Role-Based Access Control (RBAC)
 * Three security clearance tiers: `viewer` (tactical monitoring), `dept_admin` (department camera lifecycle and bulk CSV uploads), and `state_admin` (global control, user provisioning, cross-department policies).
@@ -152,6 +154,7 @@ Rather than executing compute-heavy visual anomaly networks, Sentinel performs m
 GCH-2k26/
 ├── docker-compose.yml              # PostgreSQL 16 + PostGIS 3.4 container configuration
 ├── pyproject.toml                  # Python 3.12 dependencies (FastAPI, psycopg3, pyjwt, bcrypt)
+├── LICENSE                         # Apache License Version 2.0
 ├── .env.example                    # Environment settings template
 ├── migrations/                     # Numbered, atomic SQL migrations
 │   ├── 001_extensions.sql          # PostGIS extension activation
@@ -174,7 +177,7 @@ GCH-2k26/
 │       └── api.py                  # FastAPI REST endpoints & dependency-injected cursors
 ├── workers/
 │   └── health_probe.py             # Background thread-pool probing camera reachability
-├── tests/                          # Complete automated test suite (46 passing tests)
+├── tests/                          # Automated test suite (46 passing tests)
 │   ├── conftest.py                 # Database isolation fixture & test transaction rollback
 │   ├── test_api.py                 # End-to-end HTTP API tests with RBAC assertions
 │   ├── test_auth.py                # JWT & role permission tests
@@ -239,10 +242,10 @@ uv run python -c "
 from src.registry.db import cursor
 from src.registry.auth import create_user
 with cursor() as cur:
-    cur.execute(\"INSERT INTO department (code, name) VALUES ('POL', 'Gujarat Police') ON CONFLICT (code) DO NOTHING RETURNING id\")
+    cur.execute(\"INSERT INTO department (code, name) VALUES ('POL', 'State Police Department') ON CONFLICT (code) DO NOTHING RETURNING id\")
     cur.execute(\"SELECT id FROM department WHERE code='POL'\")
     dept_id = cur.fetchone()['id']
-    create_user(cur, email='admin@gujarat.gov.in', password='sentinel-secret', role='state_admin', department_id=dept_id)
+    create_user(cur, email='admin@state.gov.in', password='sentinel-secret', role='state_admin', department_id=dept_id)
     print(f'✅ Seeded state_admin account with Department ID: {dept_id}')
 "
 ```
@@ -264,7 +267,7 @@ npm run dev
 ```
 
 * **Interactive GIS Console:** Open [http://localhost:5173](http://localhost:5173)  
-  *Login credentials:* `admin@gujarat.gov.in` / `sentinel-secret`
+  *Login credentials:* `admin@state.gov.in` / `sentinel-secret`
 * **Interactive OpenAPI Swagger Docs:** Open [http://localhost:8000/docs](http://localhost:8000/docs)
 
 ---
@@ -323,26 +326,30 @@ cd web && npm run build
 
 ---
 
-## 🏆 Hackathon Track Compliance Matrix
+## 📋 Operational Standards & Specification Compliance
 
-| Requirement (Gujarat Police Hackathon) | Module | Sentinel Implementation |
+Sentinel is architected against standard law enforcement command-and-control specifications:
+
+| Requirement Category | Standard | Sentinel Architectural Implementation |
 |---|:---:|---|
-| **Centralised CCTV Registry** | Model 1 | Postgres 16 relational inventory with department isolation |
-| **GIS Foundation & Mapping** | Model 1 | PostGIS `geography(Point, 4326)` + Leaflet GeoJSON clustering |
-| **Coverage Gap Analysis** | Model 1 | Server-side PostGIS grid math (`ST_SquareGrid` + `ST_DWithin`) |
-| **Health Monitoring** | Model 1 | Non-blocking TCP RTSP probe worker logging latency & status |
-| **Bulk Department Ingestion** | Model 1 | Streaming CSV parser with per-row savepoint error recovery |
-| **50-Feed RTSP Video Wall** | Model 2 | MediaMTX HLS/WebRTC streaming broker with 2 FPS decimation |
-| **High-Speed ANPR Pipeline** | Model 2 | Sub-40ms TensorRT FP16 dual-stage pipeline (LPDNet + LPRNet) |
-| **Cross-Camera Vehicle Tracking** | Model 2 | Relational trajectory reconstruction (`GROUP BY plate ORDER BY ts`) |
-| **Zero-Trust Stream Authentication** | Model 5 | 5ms NumPy perceptual hashing, autocorrelation, and noise drift |
-| **Policy-Bound Autonomy** | Model 5 | State-machine zone response profiles (`Normal`, `Festival`, `Curfew`) |
-| **Tamper-Evident Audit Trail** | Model 5 | Append-only SHA-256 hash-chained log for legal admissibility |
+| **Centralised CCTV Registry** | Tier-1 Core | PostgreSQL 16 relational inventory with department multi-tenancy |
+| **GIS Foundation & Mapping** | Tier-1 Core | PostGIS `geography(Point, 4326)` + Leaflet GeoJSON clustering |
+| **Coverage Gap Analysis** | Tier-1 Core | Server-side PostGIS grid math (`ST_SquareGrid` + `ST_DWithin`) |
+| **Health Monitoring** | Tier-1 Core | Non-blocking TCP RTSP probe worker logging latency & status |
+| **Bulk Ingestion & Migration** | Tier-1 Core | Streaming CSV parser with per-row savepoint error recovery |
+| **High-Density Video Wall** | Live Ingest | MediaMTX HLS/WebRTC streaming broker with 2 FPS decimation |
+| **High-Speed ANPR Pipeline** | Real-Time CV | Sub-40ms TensorRT FP16 dual-stage pipeline (LPDNet + LPRNet) |
+| **Vehicle Trajectory Tracking** | Real-Time CV | Relational trajectory reconstruction (`GROUP BY plate ORDER BY ts`) |
+| **Zero-Trust Stream Forensics** | Trust & Safety | 5ms NumPy perceptual hashing, autocorrelation, and noise drift |
+| **Policy-Bound Autonomy** | Governance | State-machine zone response profiles (`Normal`, `Festival`, `Curfew`) |
+| **Tamper-Evident Audit Trail** | Chain of Custody | Append-only SHA-256 hash-chained log for legal admissibility |
 
 ---
 
 ## ⚖️ License & Open Source Integrity
 
-This project is submitted under the **Gujarat Police Innovation Hackathon 2026**. All foundational libraries, frameworks, models, and dependencies are **100% free and open-source** (Apache 2.0 / MIT / BSD), completely free of proprietary vendor lock-in or recurring commercial license fees.
+This project is open-source software licensed under the **[Apache License, Version 2.0](LICENSE)**. 
 
-Developed with precision by **yamantaka-singh**.
+All underlying libraries, frameworks, models, and dependencies are 100% free and open-source (Apache 2.0 / MIT / BSD), guaranteeing zero proprietary vendor lock-in or recurring commercial software license fees.
+
+Copyright 2026 **Yamantaka Singh** and Sentinel Contributors.
