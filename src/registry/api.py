@@ -1,3 +1,5 @@
+from typing import Literal
+
 import jwt
 from fastapi import Depends, FastAPI, File, Form, HTTPException, UploadFile
 from fastapi.middleware.cors import CORSMiddleware
@@ -47,15 +49,18 @@ class CameraBody(BaseModel):
     lon: float = Field(ge=-180, le=180)
     external_ref: str | None = None
     address: str | None = None
-    kind: str = "ip"
+    # Mirrors the camera_kind/storage_kind/camera_status Postgres enums (migration
+    # 002). Without this, an invalid value reaches the DB uncaught and 500s;
+    # pydantic now rejects it with a 422 before the request is even routed.
+    kind: Literal["analog", "ip"] = "ip"
     vendor: str | None = None
     model: str | None = None
     rtsp_url: str | None = None
     resolution: str | None = None
     fps: int | None = None
-    storage: str = "unknown"
+    storage: Literal["local", "cloud", "unknown"] = "unknown"
     retention_days: int | None = None
-    status: str = "active"
+    status: Literal["active", "inactive", "decommissioned"] = "active"
 
 
 @app.post("/auth/login")

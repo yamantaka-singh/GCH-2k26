@@ -62,6 +62,13 @@ def test_dept_admin_cannot_write_to_another_department(client, cur):
     assert response.status_code == 403
 
 
+def test_invalid_kind_is_rejected_before_reaching_the_database(client, department):
+    response = client.post("/cameras", headers=token(client, "dept@gujarat.gov.in"), json={
+        "department_id": department, "name": "X", "lat": 23.0, "lon": 72.0, "kind": "banana",
+    })
+    assert response.status_code == 422
+
+
 def test_missing_camera_returns_404(client):
     assert client.get("/cameras/999999",
                       headers=token(client, "view@gujarat.gov.in")).status_code == 404
