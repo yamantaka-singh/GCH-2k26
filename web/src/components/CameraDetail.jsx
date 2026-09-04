@@ -7,14 +7,18 @@ const COLOUR = { true: '#16a34a', false: '#dc2626', null: '#6b7280' }
 export default function CameraDetail({ cameraId }) {
   const [camera, setCamera] = useState(null)
   const [health, setHealth] = useState(null)
+  const [error, setError] = useState(null)
 
   useEffect(() => {
     if (!cameraId) return
-    fetchCamera(cameraId).then(setCamera).catch(() => setCamera(null))
+    setCamera(null)
+    setError(null)
+    fetchCamera(cameraId).then(setCamera).catch((e) => setError(e.message))
     request(`/cameras/${cameraId}/health`).then(setHealth).catch(() => setHealth(null))
   }, [cameraId])
 
   if (!cameraId) return null
+  if (error) return <p style={{ padding: 8, color: 'crimson' }}>Could not load camera: {error}</p>
   if (!camera) return <p style={{ padding: 8 }}>Loading…</p>
 
   const key = String(health?.reachable ?? null)

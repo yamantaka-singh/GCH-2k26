@@ -2,10 +2,11 @@ import { CircleMarker, MapContainer, Popup, TileLayer } from 'react-leaflet'
 import 'leaflet/dist/leaflet.css'
 
 const STATUS_COLOUR = { active: '#16a34a', inactive: '#f59e0b', decommissioned: '#6b7280' }
+const GANDHINAGAR = [23.2156, 72.6369]
 
-export default function CameraMap({ geojson, centre = [23.2156, 72.6369], zoom = 12, onSelect, children }) {
+export default function CameraMap({ geojson, onSelect, children }) {
   return (
-    <MapContainer center={centre} zoom={zoom} style={{ height: '100%', width: '100%' }}>
+    <MapContainer center={GANDHINAGAR} zoom={12} style={{ height: '100%', width: '100%' }}>
       <TileLayer
         url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
         attribution="&copy; OpenStreetMap contributors"

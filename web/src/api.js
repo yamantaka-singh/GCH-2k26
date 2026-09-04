@@ -2,7 +2,6 @@ const BASE = import.meta.env.VITE_API_BASE ?? 'http://localhost:8000'
 
 let token = null
 export const setToken = (t) => { token = t }
-export const getToken = () => token
 
 export async function request(path, options = {}) {
   const headers = { 'Content-Type': 'application/json', ...(options.headers ?? {}) }
