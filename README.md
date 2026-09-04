@@ -61,21 +61,21 @@ Modern urban surveillance across police departments faces three crippling bottle
 ┌─────────────────────────── FAST TIER (Deterministic, <400ms) ───────────────────────────┐
 │                                                                                         │
 │    ┌───────────────────────────┐             ┌─────────────────────────────────────┐    │
-│    │    TensorRT CV Pipeline   │             │       Feed Integrity Engine         │    │
-│    │    • LPDNet (Detection)   │             │       (NumPy Perceptual Math)       │    │
-│    │    • LPRNet (OCR Reading) │             │       • Hamming Distance (Frozen)   │    │
-│    └─────────────┬─────────────┘             │       • Autocorrelation (Replay)    │    │
-│                  │ plate string              │       • Entropy Collapse (Covered)  │    │
-│                  ▼                           │       • Noise Residual Drift (Spoof)│    │
+│    │  TensorRT CV Pipeline     │             │    Feed Integrity Engine            │    │
+│    │    • LPDNet (Detection)   │             │    (NumPy Perceptual Math)          │    │
+│    │    • LPRNet (OCR Reading) │             │      • Hamming Distance (Frozen)    │    │
+│    └─────────────┬─────────────┘             │      • Autocorrelation (Replay)     │    │
+│                  │ plate string              │      • Entropy Collapse (Covered)   │    │
+│                  ▼                           │      • Noise Residual Drift (Spoof) │    │
 │    ┌───────────────────────────┐             └──────────────────┬──────────────────┘    │
-│    │  Relational Plate Tracking│                                │                       │
-│    │  GROUP BY plate ORDER BY ts│                                │ integrity_event       │
+│    │ Relational Plate Tracking │                                │                       │
+│    │ GROUP BY plate ORDER BY ts│                                │ integrity_event       │
 │    └─────────────┬─────────────┘                                │                       │
 │                  │                                              ▼                       │
 │                  ▼                            ┌────────────────────────────────────┐    │
-│    ┌───────────────────────────┐              │      Policy Engine (State Machine) │    │
-│    │   Watchlist B-Tree Match  │─────────────▶│      • Zones: Normal/Festival/Curfew│   │
-│    │   Indexed Exact Search    │              │      • Auto-Escalation Boundaries  │    │
+│    ┌───────────────────────────┐              │   Policy Engine (State Machine)    │    │
+│    │   Watchlist B-Tree Match  │─────────────▶│    • Zones: Normal/Festival/Curfew │    │
+│    │   Indexed Exact Search    │              │    • Auto-Escalation Boundaries    │    │
 │    └───────────────────────────┘              └─────────────────┬──────────────────┘    │
 │                                                                 │                       │
 └─────────────────────────────────────────────┬───────────────────┴───────────────────────┘
