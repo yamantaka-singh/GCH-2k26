@@ -6,12 +6,15 @@ from dataclasses import dataclass
 # output. PyJWT warns below this; for a police system it should be a hard failure.
 MIN_JWT_SECRET_BYTES = 32
 
+# 12 hours. A dataclass field for this was config for a value that never varied;
+# move it back into Settings if a deployment ever needs its own TTL.
+JWT_TTL_SECONDS = 43200
+
 
 @dataclass(frozen=True)
 class Settings:
     database_url: str
     jwt_secret: str
-    jwt_ttl_seconds: int = 43200
 
 
 def load_settings() -> Settings:

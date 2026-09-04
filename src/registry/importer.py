@@ -46,12 +46,19 @@ def import_csv(cur, department_id: int, text: str) -> ImportResult:
             continue
 
         extras = {k: (row.get(k) or None) for k in OPTIONAL if row.get(k)}
-        fps = row.get("fps")
-        if fps:
-            extras["fps"] = int(fps) if fps.isdigit() else None
-        retention = row.get("retention_days")
-        if retention:
-            extras["retention_days"] = int(retention) if retention.isdigit() else None
+        bad_number = None
+        for field in ("fps", "retention_days"):
+            raw_value = row.get(field)
+            if not raw_value:
+                continue
+            if raw_value.isdigit():
+                extras[field] = int(raw_value)
+            else:
+                bad_number = f"{field} must be a whole number, got {raw_value!r}"
+                break
+        if bad_number:
+            result.errors.append((line, bad_number))
+            continue
 
         # A savepoint per row: a constraint violation aborts only this row, not the
         # whole import, and the caller's outer transaction stays usable.

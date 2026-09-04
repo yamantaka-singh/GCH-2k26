@@ -3,7 +3,7 @@ import datetime
 import bcrypt
 import jwt
 
-from .config import load_settings
+from .config import JWT_TTL_SECONDS, load_settings
 
 # bcrypt refuses input over 72 bytes rather than truncating it.
 BCRYPT_MAX_BYTES = 72
@@ -31,7 +31,7 @@ def issue_token(*, user_id: int, role: str, department_id: int | None) -> str:
             "role": role,
             "dept": department_id,
             "iat": now,
-            "exp": now + datetime.timedelta(seconds=settings.jwt_ttl_seconds),
+            "exp": now + datetime.timedelta(seconds=JWT_TTL_SECONDS),
         },
         settings.jwt_secret,
         algorithm="HS256",
