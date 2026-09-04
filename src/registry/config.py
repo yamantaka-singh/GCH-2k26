@@ -2,6 +2,11 @@ import os
 from dataclasses import dataclass
 
 
+# RFC 7518 section 3.2: an HMAC-SHA256 key must be at least as long as the hash
+# output. PyJWT warns below this; for a police system it should be a hard failure.
+MIN_JWT_SECRET_BYTES = 32
+
+
 @dataclass(frozen=True)
 class Settings:
     database_url: str
@@ -17,4 +22,9 @@ def load_settings() -> Settings:
     secret = os.environ.get("JWT_SECRET")
     if not secret:
         raise RuntimeError("JWT_SECRET is not set")
+    if len(secret.encode()) < MIN_JWT_SECRET_BYTES:
+        raise RuntimeError(
+            f"JWT_SECRET is {len(secret.encode())} bytes; "
+            f"HMAC-SHA256 needs at least {MIN_JWT_SECRET_BYTES} (RFC 7518 3.2)"
+        )
     return Settings(database_url=url, jwt_secret=secret)

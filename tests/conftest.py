@@ -7,7 +7,7 @@ from psycopg.rows import dict_row
 os.environ.setdefault(
     "DATABASE_URL", "postgresql://sentinel:sentinel@localhost:55432/registry_test"
 )
-os.environ.setdefault("JWT_SECRET", "test-secret")
+os.environ.setdefault("JWT_SECRET", "test-secret-key-of-at-least-32-bytes")
 
 from src.registry.db import pool  # noqa: E402  (import after env is set)
 
