@@ -28,6 +28,22 @@ def test_token_round_trips_claims():
     assert claims["dept"] == 3
 
 
+def test_expired_token_is_rejected():
+    import datetime as dt
+
+    from src.registry.config import load_settings
+
+    settings = load_settings()
+    now = dt.datetime.now(dt.UTC)
+    expired = jwt.encode(
+        {"sub": "1", "role": "viewer", "exp": now - dt.timedelta(seconds=1), "iat": now - dt.timedelta(hours=1)},
+        settings.jwt_secret,
+        algorithm="HS256",
+    )
+    with pytest.raises(jwt.ExpiredSignatureError):
+        decode_token(expired)
+
+
 def test_token_signed_with_another_secret_is_rejected():
     forged = jwt.encode(
         {"sub": "1", "role": "state_admin"},

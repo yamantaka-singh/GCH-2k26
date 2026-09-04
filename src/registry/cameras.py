@@ -39,6 +39,28 @@ def create_camera(
     return cur.fetchone()["id"]
 
 
+def update_camera(cur, camera_id: int, **fields) -> Camera | None:
+    """Partial update: only keys present in `fields` are touched, so a caller
+    passing model_dump(exclude_unset=True) can clear an optional field to None
+    without also overwriting every field it didn't send. `fields` is expected
+    to come from CameraBody's declared attributes (see api.py), not raw
+    user input, so the column names are trusted the same way create_camera's
+    kwargs already are.
+    """
+    lat = fields.pop("lat", None)
+    lon = fields.pop("lon", None)
+    set_parts = [f"{key} = %s" for key in fields]
+    values = list(fields.values())
+    if lat is not None or lon is not None:
+        set_parts.append("geom = ST_SetSRID(ST_MakePoint(%s, %s), 4326)::geography")
+        values += [lon, lat]
+    if not set_parts:
+        return get_camera(cur, camera_id)
+    values.append(camera_id)
+    cur.execute(f"UPDATE camera SET {', '.join(set_parts)} WHERE id = %s", values)
+    return get_camera(cur, camera_id)
+
+
 def get_camera(cur, camera_id: int) -> Camera | None:
     cur.execute(f"SELECT {COLUMNS} FROM camera WHERE id = %s", (camera_id,))
     row = cur.fetchone()
