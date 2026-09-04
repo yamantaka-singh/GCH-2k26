@@ -63,6 +63,25 @@ class CameraBody(BaseModel):
     status: Literal["active", "inactive", "decommissioned"] = "active"
 
 
+class CameraUpdateBody(BaseModel):
+    # All optional: a PATCH only touches the fields the client actually sends.
+    # exclude_unset (below) is what distinguishes "omitted" from "sent as null".
+    name: str | None = Field(default=None, min_length=1)
+    lat: float | None = Field(default=None, ge=-90, le=90)
+    lon: float | None = Field(default=None, ge=-180, le=180)
+    external_ref: str | None = None
+    address: str | None = None
+    kind: Literal["analog", "ip"] | None = None
+    vendor: str | None = None
+    model: str | None = None
+    rtsp_url: str | None = None
+    resolution: str | None = None
+    fps: int | None = None
+    storage: Literal["local", "cloud", "unknown"] | None = None
+    retention_days: int | None = None
+    status: Literal["active", "inactive", "decommissioned"] | None = None
+
+
 @app.post("/auth/login")
 def login(body: LoginBody, cur=Depends(get_cursor)):
     user = authenticate(cur, body.email, body.password)
@@ -104,6 +123,20 @@ def get_camera(camera_id: int, cur=Depends(get_cursor), _=Depends(claims)):
     if camera is None:
         raise HTTPException(status_code=404, detail="no such camera")
     return vars(camera)
+
+
+@app.patch("/cameras/{camera_id}")
+def update_camera(camera_id: int, body: CameraUpdateBody,
+                  cur=Depends(get_cursor), user=Depends(claims)):
+    existing = camera_queries.get_camera(cur, camera_id)
+    if existing is None:
+        raise HTTPException(status_code=404, detail="no such camera")
+    if not may_write(user, existing.department_id):
+        raise HTTPException(status_code=403, detail="not permitted for this department")
+    fields = body.model_dump(exclude_unset=True)
+    if ("lat" in fields) != ("lon" in fields):
+        raise HTTPException(status_code=400, detail="lat and lon must be provided together")
+    return vars(camera_queries.update_camera(cur, camera_id, **fields))
 
 
 @app.post("/cameras/import")

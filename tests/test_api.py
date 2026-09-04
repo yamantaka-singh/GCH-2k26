@@ -107,3 +107,58 @@ def test_gaps_endpoint_returns_polygons(client):
     )
     assert response.status_code == 200
     assert response.json()["cells"][0]["type"] == "Polygon"
+
+
+def test_dept_admin_updates_a_camera(client, department):
+    headers = token(client, "dept@gujarat.gov.in")
+    created = client.post("/cameras", headers=headers, json={
+        "department_id": department, "name": "Sector 18", "lat": 23.0, "lon": 72.0,
+        "vendor": "Hikvision",
+    })
+    camera_id = created.json()["id"]
+
+    patched = client.patch(f"/cameras/{camera_id}", headers=headers,
+                           json={"vendor": "Dahua"})
+    assert patched.status_code == 200
+    assert patched.json()["vendor"] == "Dahua"
+    assert patched.json()["name"] == "Sector 18"
+
+
+def test_patch_can_decommission_a_camera(client, department):
+    headers = token(client, "dept@gujarat.gov.in")
+    created = client.post("/cameras", headers=headers, json={
+        "department_id": department, "name": "X", "lat": 23.0, "lon": 72.0})
+    camera_id = created.json()["id"]
+
+    patched = client.patch(f"/cameras/{camera_id}", headers=headers,
+                           json={"status": "decommissioned"})
+    assert patched.json()["status"] == "decommissioned"
+
+
+def test_patch_rejects_lat_without_lon(client, department):
+    headers = token(client, "dept@gujarat.gov.in")
+    created = client.post("/cameras", headers=headers, json={
+        "department_id": department, "name": "X", "lat": 23.0, "lon": 72.0})
+    camera_id = created.json()["id"]
+
+    response = client.patch(f"/cameras/{camera_id}", headers=headers, json={"lat": 23.5})
+    assert response.status_code == 400
+
+
+def test_viewer_cannot_patch_a_camera(client, department):
+    headers = token(client, "dept@gujarat.gov.in")
+    created = client.post("/cameras", headers=headers, json={
+        "department_id": department, "name": "X", "lat": 23.0, "lon": 72.0})
+    camera_id = created.json()["id"]
+
+    response = client.patch(f"/cameras/{camera_id}",
+                            headers=token(client, "view@gujarat.gov.in"),
+                            json={"vendor": "Dahua"})
+    assert response.status_code == 403
+
+
+def test_patch_of_missing_camera_returns_404(client):
+    response = client.patch("/cameras/999999",
+                            headers=token(client, "dept@gujarat.gov.in"),
+                            json={"vendor": "Dahua"})
+    assert response.status_code == 404

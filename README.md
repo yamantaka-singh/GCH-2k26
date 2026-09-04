@@ -5,7 +5,7 @@
 [![PostgreSQL](https://img.shields.io/badge/PostgreSQL-16%20%2B%20PostGIS%203.4-336791?style=flat-square&logo=postgresql&logoColor=white)](https://postgis.net)
 [![React](https://img.shields.io/badge/React-18.3-61DAFB?style=flat-square&logo=react&logoColor=black)](https://react.dev)
 [![Leaflet](https://img.shields.io/badge/Leaflet-1.9.4-199900?style=flat-square&logo=leaflet&logoColor=white)](https://leafletjs.com)
-[![Tests](https://img.shields.io/badge/Tests-54%20Passing%20(48%20Pytest%20%7C%206%20Vitest)-brightgreen?style=flat-square&logo=pytest&logoColor=white)]()
+[![Tests](https://img.shields.io/badge/Tests-66%20Passing%20(60%20Pytest%20%7C%206%20Vitest)-brightgreen?style=flat-square&logo=pytest&logoColor=white)]()
 [![License](https://img.shields.io/badge/License-Apache%202.0-blue?style=flat-square)](LICENSE)
 
 A centralised camera registry with PostGIS-backed mapping, coverage gap analysis, CSV bulk import, health monitoring, and role-based access. Built for the [Gujarat Police Innovation Hackathon 2026](https://sentinel.gujarat.gov.in), where "Model 1" (a state-wide CCTV registry and GIS foundation) is a mandatory component of every submission track.
@@ -54,7 +54,7 @@ A single FastAPI service backed by Postgres/PostGIS, a React frontend that talks
 
 ## What's built
 
-**Camera registry.** Create, list, and fetch cameras with department, vendor, coordinates, RTSP URL, retention policy, and status. Coordinates are stored as `geography(Point, 4326)` with a GiST index (`src/registry/cameras.py`, `migrations/002_department_camera.sql`).
+**Camera registry.** Create, list, fetch, and partially update cameras (department, vendor, coordinates, RTSP URL, retention policy, status). Decommissioning a camera is a status update (`status: "decommissioned"`), not a delete: health and sighting history stays attached to the row. Coordinates are stored as `geography(Point, 4326)` with a GiST index (`src/registry/cameras.py`, `migrations/002_department_camera.sql`).
 
 **CSV bulk import.** Each row inserts inside its own savepoint, so one malformed row (bad coordinates, a non-numeric `fps`, a duplicate `external_ref`) is reported by line number and skipped, while every valid row in the same file still commits (`src/registry/importer.py`).
 
@@ -90,10 +90,10 @@ GCH-2k26/
 │   ├── geo.py                      # GeoJSON feed, gap-grid query, the 10,000-cell cap
 │   ├── health.py                   # TCP probe, health history, summary counts
 │   ├── auth.py                     # bcrypt, JWT, may_write()
-│   └── api.py                      # the 10 routes
+│   └── api.py                      # the 11 routes
 ├── workers/
 │   └── health_probe.py             # probes every active camera on a loop
-├── tests/                          # 48 pytest tests, against real Postgres/PostGIS
+├── tests/                          # 60 pytest tests, against real Postgres/PostGIS
 └── web/                            # React 18 + Vite + Leaflet
     └── src/
         ├── App.jsx                 # login, layout, state
@@ -167,6 +167,7 @@ All routes except `/auth/login` require `Authorization: Bearer <JWT>`.
 | `GET` | `/cameras` | Authenticated | Lists cameras, filterable by department and status, paginated |
 | `POST` | `/cameras` | `dept_admin`, `state_admin` | Creates a camera |
 | `GET` | `/cameras/{id}` | Authenticated | Fetches one camera |
+| `PATCH` | `/cameras/{id}` | `dept_admin`, `state_admin` | Updates only the fields sent; provide `lat` and `lon` together or not at all |
 | `POST` | `/cameras/import` | `dept_admin`, `state_admin` | Multipart CSV upload, returns inserted count and per-row errors |
 | `GET` | `/cameras/{id}/health` | Authenticated | Latest reachability check for one camera |
 | `GET` | `/health/summary` | Authenticated | Counts of reachable / unreachable / unchecked across all cameras |
@@ -176,14 +177,12 @@ All routes except `/auth/login` require `Authorization: Bearer <JWT>`.
 ## Testing
 
 ```bash
-uv run pytest -v          # 48 tests, real Postgres/PostGIS, per-test transaction rollback
+uv run pytest -v          # 60 tests, real Postgres/PostGIS, per-test transaction rollback
 cd web && npm test        # 6 tests
 cd web && npm run build   # production bundle
 ```
 
-What's covered: PostGIS geometry round-trips and the gap-grid math against real coordinates, not mocks; CSV import isolation (one bad row doesn't block the others); every `may_write()` role combination; JWT round-trip, forged-signature rejection, and expiry; camera creation rejecting an invalid `kind`/`status`/`storage` value with a 422 before it reaches the database; a real bound TCP socket for the health probe, not a mock.
-
-One known gap: `workers/health_probe.py`'s `sweep()` (the function that queries all active cameras and fans the probes out across a thread pool) has no automated test. Its two halves (the query, and `probe()`/`record_check()`) are each tested individually; `sweep()` itself was verified by hand against a real database during development.
+What's covered: PostGIS geometry round-trips and the gap-grid math against real coordinates, not mocks; CSV import isolation (one bad row doesn't block the others); every `may_write()` role combination; JWT round-trip, forged-signature rejection, and expiry; camera creation and update rejecting an invalid `kind`/`status`/`storage` value with a 422 before it reaches the database; a real bound TCP socket for the health probe, not a mock, including a full `sweep()` run against committed rows.
 
 ## Roadmap (not implemented)
 

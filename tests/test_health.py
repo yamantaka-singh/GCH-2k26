@@ -2,6 +2,8 @@ import socket
 import threading
 
 from src.registry.cameras import create_camera, get_camera
+from src.registry.db import cursor
+from workers.health_probe import sweep
 from src.registry.health import health_summary, latest_health, probe, record_check
 
 
@@ -58,3 +60,40 @@ def test_summary_counts_never_checked_as_unknown(cur, department):
     record_check(cur, down, reachable=False, error="refused")
 
     assert health_summary(cur) == {"total": 3, "reachable": 1, "unreachable": 1, "unknown": 1}
+
+
+def test_sweep_probes_active_cameras_with_a_url_and_skips_the_rest():
+    """sweep() opens its own connection via cursor(), separate from the cur
+    fixture's rolled-back transaction, so it needs real committed rows -- and
+    must clean them up itself rather than relying on rollback."""
+    open_port = _listening_port()
+    with cursor() as cur:
+        cur.execute(
+            "INSERT INTO department (code, name) VALUES ('SWEEP_T', 'sweep test')"
+            " ON CONFLICT (code) DO NOTHING"
+        )
+        cur.execute("SELECT id FROM department WHERE code = 'SWEEP_T'")
+        dept_id = cur.fetchone()["id"]
+        reachable_id = create_camera(cur, department_id=dept_id, name="reachable",
+                                     lat=23.0, lon=72.0,
+                                     rtsp_url=f"rtsp://127.0.0.1:{open_port}/x")
+        unreachable_id = create_camera(cur, department_id=dept_id, name="unreachable",
+                                       lat=23.1, lon=72.1, rtsp_url="rtsp://127.0.0.1:1/x")
+        no_url_id = create_camera(cur, department_id=dept_id, name="no-url",
+                                  lat=23.2, lon=72.2)
+
+    try:
+        assert sweep() == 2  # the no-url camera is never a target
+
+        with cursor() as cur:
+            assert latest_health(cur, reachable_id).reachable is True
+            assert latest_health(cur, unreachable_id).reachable is False
+            assert latest_health(cur, no_url_id) is None
+    finally:
+        with cursor() as cur:
+            cur.execute(
+                "DELETE FROM camera_health WHERE camera_id = ANY(%s)",
+                ([reachable_id, unreachable_id, no_url_id],),
+            )
+            cur.execute("DELETE FROM camera WHERE department_id = %s", (dept_id,))
+            cur.execute("DELETE FROM department WHERE id = %s", (dept_id,))
