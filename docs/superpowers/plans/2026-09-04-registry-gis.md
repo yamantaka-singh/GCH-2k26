@@ -1094,7 +1094,7 @@ def health_summary(cur) -> dict:
 `workers/health_probe.py`:
 
 ```python
-"""Probe every active camera on a fixed interval. Run with: uv run python workers/health_probe.py"""
+"""Probe every active camera on a fixed interval. Run from the repo root as a module: uv run python -m workers.health_probe"""
 import os
 import time
 from concurrent.futures import ThreadPoolExecutor
@@ -2243,7 +2243,7 @@ Expected: 6 passed.
 With the API and the health worker running:
 
 ```bash
-uv run python workers/health_probe.py &
+uv run python -m workers.health_probe &
 cd web && npm run dev
 ```
 
