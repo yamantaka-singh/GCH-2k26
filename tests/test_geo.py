@@ -1,3 +1,5 @@
+import pytest
+
 from src.registry.cameras import create_camera
 from src.registry.geo import cameras_geojson, coverage_gaps
 
@@ -49,3 +51,16 @@ def test_inactive_cameras_do_not_count_as_coverage(cur, department):
     create_camera(cur, department_id=department, name="Broken", lat=23.205, lon=72.605,
                   status="decommissioned")
     assert len(coverage_gaps(cur, cell_m=500, radius_m=1000, **box)) == baseline
+
+
+def test_state_wide_bbox_is_refused_rather_than_hanging(cur):
+    """A 6x5 degree box at 500 m is ~1.3M polygons; it must fail fast."""
+    with pytest.raises(ValueError, match="over the"):
+        coverage_gaps(cur, min_lon=68.1, min_lat=20.1, max_lon=74.5, max_lat=24.7,
+                      cell_m=500, radius_m=300)
+
+
+def test_same_wide_bbox_is_allowed_at_a_coarser_cell(cur):
+    cells = coverage_gaps(cur, min_lon=68.1, min_lat=20.1, max_lon=74.5, max_lat=24.7,
+                          cell_m=20000, radius_m=300)
+    assert 0 < len(cells) <= 10_000

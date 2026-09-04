@@ -1,3 +1,9 @@
+# A 6x5 degree bbox at 500 m cells is ~1.3 million polygons: the query never
+# returns and the response never fits. Anyone who zooms out with the gap layer
+# on would stall the API, so the ceiling lives here rather than in the caller.
+MAX_GAP_CELLS = 10_000
+
+
 def cameras_geojson(cur, *, department_id: int | None = None) -> dict:
     """COALESCE keeps the return shape stable when no camera matches; without it
     json_agg returns NULL and the frontend has to special-case it."""
@@ -43,6 +49,26 @@ def coverage_gaps(cur, *, min_lon: float, min_lat: float, max_lon: float, max_la
     EPSG:32643 (UTM 43N) instead of 3857 -- but note 43N only covers 72-78E, so
     Kutch and Saurashtra would need 32642, making the projection per-region.
     """
+    params = {"min_lon": min_lon, "min_lat": min_lat, "max_lon": max_lon,
+              "max_lat": max_lat, "cell_m": cell_m, "radius_m": radius_m}
+
+    # Cost the grid before building it. ST_Area on the envelope is O(1); the grid
+    # itself is O(cells).
+    cur.execute(
+        """
+        SELECT ST_Area(ST_Transform(ST_MakeEnvelope(%(min_lon)s, %(min_lat)s,
+                                                    %(max_lon)s, %(max_lat)s, 4326), 3857))
+               / (%(cell_m)s::numeric ^ 2) AS cells
+        """,
+        params,
+    )
+    wanted = int(cur.fetchone()["cells"])
+    if wanted > MAX_GAP_CELLS:
+        raise ValueError(
+            f"that area needs {wanted:,} cells at {cell_m} m, over the "
+            f"{MAX_GAP_CELLS:,} limit; zoom in or raise cell_m"
+        )
+
     cur.execute(
         """
         WITH bbox AS (
@@ -64,7 +90,6 @@ def coverage_gaps(cur, *, min_lon: float, min_lat: float, max_lon: float, max_la
         )
         ORDER BY ST_YMin(cell), ST_XMin(cell)
         """,
-        {"min_lon": min_lon, "min_lat": min_lat, "max_lon": max_lon, "max_lat": max_lat,
-         "cell_m": cell_m, "radius_m": radius_m},
+        params,
     )
     return [row["cell"] for row in cur.fetchall()]

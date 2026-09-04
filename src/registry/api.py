@@ -135,6 +135,10 @@ def cameras_geojson(department_id: int | None = None,
 def gaps(min_lon: float, min_lat: float, max_lon: float, max_lat: float,
          cell_m: int = 500, radius_m: int = 300,
          cur=Depends(get_cursor), _=Depends(claims)):
-    return {"cells": geo.coverage_gaps(cur, min_lon=min_lon, min_lat=min_lat,
-                                       max_lon=max_lon, max_lat=max_lat,
-                                       cell_m=cell_m, radius_m=radius_m)}
+    try:
+        cells = geo.coverage_gaps(cur, min_lon=min_lon, min_lat=min_lat,
+                                  max_lon=max_lon, max_lat=max_lat,
+                                  cell_m=cell_m, radius_m=radius_m)
+    except ValueError as exc:
+        raise HTTPException(status_code=400, detail=str(exc))
+    return {"cells": cells}
