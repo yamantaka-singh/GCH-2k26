@@ -1,0 +1,24 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Sentinel CCTV Registry</title>
+    <style>
+      /* The layout assumes a light ground (white sidebar, #ddd rules, light OSM
+         tiles). Declaring it stops a dark-themed browser rendering dark text on
+         a dark body. */
+      :root { color-scheme: light; }
+      body {
+        margin: 0;
+        background: #fff;
+        color: #111;
+        font: 14px/1.45 system-ui, -apple-system, "Segoe UI", sans-serif;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="root"></div>
+    <script type="module" src="/src/main.jsx"></script>
+  </body>
+</html>

@@ -12,12 +12,20 @@ dependencies = [
 ]
 
 [dependency-groups]
-dev = ["pytest>=8.3", "httpx>=0.27"]
+dev = [
+    "pytest>=8.3",
+    "httpx2>=2.12.0",
+]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
 addopts = "-q"
 pythonpath = ["."]
+filterwarnings = [
+  # starlette imports a deprecated anyio alias at module scope. Third-party, not
+  # fixable here. Scoped to this one message so our own deprecations still surface.
+  "ignore:The anyio.abc.BlockingPortal alias is deprecated:DeprecationWarning:starlette.testclient",
+]
 
 [tool.uv]
 package = false

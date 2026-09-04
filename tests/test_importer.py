@@ -51,3 +51,19 @@ def test_duplicate_external_ref_is_reported_not_fatal(cur, department):
     result = import_csv(cur, department, csv_text)
     assert result.inserted == 2
     assert [line for line, _ in result.errors] == [3]
+
+
+def test_non_numeric_fps_is_reported_not_silently_dropped(cur, department):
+    result = import_csv(cur, department, "name,lat,lon,fps\nCam,23.0,72.0,25fps\n")
+    assert result.inserted == 0
+    assert result.errors == [(2, "fps must be a whole number, got '25fps'")]
+
+
+def test_numeric_fps_and_retention_are_stored(cur, department):
+    result = import_csv(
+        cur, department, "name,lat,lon,fps,retention_days\nCam,23.0,72.0,25,15\n"
+    )
+    assert result.inserted == 1
+    assert result.errors == []
+    stored = list_cameras(cur)[0]
+    assert (stored.fps, stored.retention_days) == (25, 15)

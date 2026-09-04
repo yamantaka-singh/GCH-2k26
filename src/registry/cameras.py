@@ -9,6 +9,13 @@ COLUMNS = """
     ST_Y(geom::geometry) AS lat, ST_X(geom::geometry) AS lon
 """
 
+# Shared by list_cameras and count_cameras so a new predicate cannot be added to
+# one and forgotten in the other. Expects (department_id, department_id, status, status).
+FILTER = """
+    WHERE (%s::int IS NULL OR department_id = %s)
+      AND (%s::text IS NULL OR status::text = %s)
+"""
+
 
 def create_camera(
     cur, *, department_id: int, name: str, lat: float, lon: float,
@@ -41,13 +48,7 @@ def get_camera(cur, camera_id: int) -> Camera | None:
 def list_cameras(cur, *, department_id: int | None = None, status: str | None = None,
                  limit: int = 100, offset: int = 0) -> list[Camera]:
     cur.execute(
-        f"""
-        SELECT {COLUMNS} FROM camera
-        WHERE (%s::int IS NULL OR department_id = %s)
-          AND (%s::text IS NULL OR status::text = %s)
-        ORDER BY id
-        LIMIT %s OFFSET %s
-        """,
+        f"SELECT {COLUMNS} FROM camera {FILTER} ORDER BY id LIMIT %s OFFSET %s",
         (department_id, department_id, status, status, limit, offset),
     )
     return [Camera(**row) for row in cur.fetchall()]
@@ -55,11 +56,7 @@ def list_cameras(cur, *, department_id: int | None = None, status: str | None = 
 
 def count_cameras(cur, *, department_id: int | None = None, status: str | None = None) -> int:
     cur.execute(
-        """
-        SELECT count(*) AS n FROM camera
-        WHERE (%s::int IS NULL OR department_id = %s)
-          AND (%s::text IS NULL OR status::text = %s)
-        """,
+        f"SELECT count(*) AS n FROM camera {FILTER}",
         (department_id, department_id, status, status),
     )
     return cur.fetchone()["n"]
