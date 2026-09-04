@@ -272,7 +272,7 @@ from src.registry.db import pool  # noqa: E402  (import after env is set)
 
 @pytest.fixture(scope="session", autouse=True)
 def migrated():
-    subprocess.run(["uv", "run", "python", "scripts/migrate.py"], check=True)
+    subprocess.run(["uv", "run", "python", "-m", "scripts.migrate"], check=True)
 
 
 @pytest.fixture
