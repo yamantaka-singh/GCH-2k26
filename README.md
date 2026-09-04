@@ -352,4 +352,4 @@ This project is open-source software licensed under the **[Apache License, Versi
 
 All underlying libraries, frameworks, models, and dependencies are 100% free and open-source (Apache 2.0 / MIT / BSD), guaranteeing zero proprietary vendor lock-in or recurring commercial software license fees.
 
-Copyright 2026 **Yamantaka Singh** and Sentinel Contributors.
+Copyright 2026 **Mrityunjay Singh**, **Yashasvi Dabas** and Sentinel Contributors.
