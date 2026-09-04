@@ -1626,7 +1626,7 @@ Expected: 9 passed.
 uv run pytest -v
 ```
 
-Expected: 41 passed. Nothing from earlier tasks should have broken.
+Expected: 44 passed, zero warnings. Nothing from earlier tasks should have broken.
 
 - [ ] **Step 6: Seed a demo account and start the server**
 
