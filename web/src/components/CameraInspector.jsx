@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react'
+import React, { useState, useEffect } from 'react'
 import {
   X,
   Radio,
@@ -10,8 +10,8 @@ import {
   ZoomIn,
   VideoOff,
 } from 'lucide-react'
-import { fetchCameraHealth, fetchLiveUrl } from '../api'
-import { attachWhep } from '../liveFeed'
+import { fetchCameraHealth } from '../api'
+import { useLiveFeed } from '../useLiveFeed'
 
 export default function CameraInspector({
   camera,
@@ -25,10 +25,7 @@ export default function CameraInspector({
   const [liveHealth, setLiveHealth] = useState(health)
   const [timeStr, setTimeStr] = useState('')
   const [zoomLevel, setZoomLevel] = useState(1.0) // 1.0 | 1.5 | 2.0
-  const [feedError, setFeedError] = useState(null)
-  const [videoConnected, setVideoConnected] = useState(false)
-
-  const videoRef = useRef(null)
+  const { videoRef, status: feedStatus, message: feedMessage, onLoadedData } = useLiveFeed(camera?.id)
 
   useEffect(() => setLiveHealth(health), [health])
 
@@ -44,26 +41,6 @@ export default function CameraInspector({
     const interval = setInterval(updateTime, 100)
     return () => clearInterval(interval)
   }, [])
-
-  // Connects to the real grid feed over WebRTC (WHEP) when this camera has
-  // one; otherwise shows an honest "no live feed" state -- never a stock clip.
-  useEffect(() => {
-    setFeedError(null)
-    setVideoConnected(false)
-    if (!camera?.id || !videoRef.current) return undefined
-    let detach = () => {}
-    let cancelled = false
-    fetchLiveUrl(camera.id)
-      .then(({ whep_url }) => {
-        if (!cancelled) {
-          detach = attachWhep(videoRef.current, whep_url, () => {
-            if (!cancelled) setFeedError('Linked, but the feed is not responding.')
-          })
-        }
-      })
-      .catch(() => { if (!cancelled) setFeedError('No live grid feed linked to this camera.') })
-    return () => { cancelled = true; detach() }
-  }, [camera?.id])
 
   if (!camera) return null
 
@@ -125,20 +102,20 @@ export default function CameraInspector({
               autoPlay
               muted
               playsInline
-              onLoadedData={() => setVideoConnected(true)}
+              onLoadedData={onLoadedData}
               className="w-full h-full object-cover transition-all duration-300"
               style={{ transform: `scale(${zoomLevel})`, transformOrigin: 'center center' }}
             />
-            {!videoConnected && !feedError && (
+            {feedStatus === 'connecting' && (
               <div className="absolute inset-0 flex flex-col items-center justify-center gap-2 bg-[#06070a] text-slate-500">
                 <RefreshCw className="w-5 h-5 animate-spin" />
                 <span className="text-[10px] font-mono uppercase tracking-wider">Connecting...</span>
               </div>
             )}
-            {feedError && (
+            {feedStatus === 'error' && (
               <div className="absolute inset-0 flex flex-col items-center justify-center gap-2 bg-[#06070a] text-slate-500">
                 <VideoOff className="w-6 h-6" />
-                <span className="text-[10px] font-mono uppercase tracking-wider">{feedError}</span>
+                <span className="text-[10px] font-mono uppercase tracking-wider">{feedMessage}</span>
               </div>
             )}
           </div>
@@ -150,10 +127,10 @@ export default function CameraInspector({
           <div className="relative z-20 p-2.5 flex items-center justify-between text-[10px] font-mono">
             <div className="flex items-center gap-1.5 px-2 py-0.5 rounded bg-black/75 backdrop-blur-md border border-white/[0.1] text-slate-200">
               <span className={`w-1.5 h-1.5 rounded-full ${
-                feedError ? 'bg-slate-500' : videoConnected ? 'bg-rose-500 animate-pulse' : 'bg-amber-500 animate-pulse'
+                feedStatus === 'error' ? 'bg-slate-500' : feedStatus === 'live' ? 'bg-rose-500 animate-pulse' : 'bg-amber-500 animate-pulse'
               }`} />
               <span className="tracking-widest font-semibold uppercase">
-                {feedError ? 'NO FEED' : videoConnected ? 'LIVE' : 'CONNECTING'}
+                {feedStatus === 'error' ? 'NO FEED' : feedStatus === 'live' ? 'LIVE' : 'CONNECTING'}
               </span>
             </div>
             <span className="text-slate-300 bg-black/75 backdrop-blur-md px-2 py-0.5 rounded border border-white/[0.1] tabular-nums text-[9px]">

@@ -7,13 +7,37 @@ import {
   ExternalLink,
   ShieldAlert,
   SlidersHorizontal,
+  RefreshCw,
+  VideoOff,
 } from 'lucide-react'
+import { useLiveFeed } from '../useLiveFeed'
 
-const VIDEO_FEEDS = [
-  '/videos/traffic_junction_1.mp4',
-  '/videos/traffic_junction_2.mp4',
-  '/videos/traffic_highway_3.mp4',
-]
+// One grid tile: connects its own <video> to the real feed over WHEP.
+function TileVideo({ cameraId }) {
+  const { videoRef, status, message, onLoadedData } = useLiveFeed(cameraId)
+  return (
+    <div className="absolute inset-0 overflow-hidden bg-black">
+      <video
+        ref={videoRef}
+        autoPlay
+        muted
+        playsInline
+        onLoadedData={onLoadedData}
+        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+      />
+      {status !== 'live' && (
+        <div className="absolute inset-0 flex flex-col items-center justify-center gap-1.5 text-slate-500">
+          {status === 'connecting'
+            ? <RefreshCw className="w-4 h-4 animate-spin" />
+            : <VideoOff className="w-4 h-4" />}
+          <span className="text-[9px] font-mono uppercase tracking-wider">
+            {status === 'connecting' ? 'Connecting...' : message}
+          </span>
+        </div>
+      )}
+    </div>
+  )
+}
 
 export default function VideoWall({
   cameras,
@@ -131,9 +155,8 @@ export default function VideoWall({
             : 'grid-cols-1 md:grid-cols-3 grid-rows-2'
         }`}
       >
-        {visibleCameras.map((cam, idx) => {
+        {visibleCameras.map((cam) => {
           const dept = (departments || []).find((d) => d.id === cam.department_id)
-          const videoSrc = VIDEO_FEEDS[Math.abs(cam.id || idx) % VIDEO_FEEDS.length]
 
           return (
             <div
@@ -141,17 +164,7 @@ export default function VideoWall({
               onClick={() => handleTileClick(cam)}
               className="group relative rounded-xl bg-[#090b10] border border-white/[0.08] hover:border-white/30 transition-all duration-200 overflow-hidden flex flex-col justify-between cursor-pointer shadow-xl"
             >
-              {/* Native Video Feed */}
-              <div className="absolute inset-0 overflow-hidden bg-black">
-                <video
-                  src={videoSrc}
-                  autoPlay
-                  loop
-                  muted
-                  playsInline
-                  className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-                />
-              </div>
+              <TileVideo cameraId={cam.id} />
 
               {/* CRT Scanline Overlay */}
               <div className="absolute inset-0 bg-[linear-gradient(rgba(18,16,16,0)_50%,rgba(0,0,0,0.25)_50%)] bg-[length:100%_4px] pointer-events-none opacity-30 z-10" />
@@ -181,7 +194,7 @@ export default function VideoWall({
               {/* Tile Bottom Telemetry Overlay */}
               <div className="relative z-20 p-2.5 flex items-center justify-between text-[9px] font-mono text-slate-300 bg-gradient-to-t from-black/85 via-black/40 to-transparent">
                 <span className="text-slate-400">{cam.external_ref || `NODE-${cam.id}`}</span>
-                <span>{cam.resolution || '1080p'} · {cam.fps || 25} FPS · 4.2 Mbps</span>
+                <span>{cam.resolution || '1080p'} · {cam.fps || 25} FPS</span>
               </div>
             </div>
           )
