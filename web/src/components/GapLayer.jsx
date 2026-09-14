@@ -20,8 +20,6 @@ export default function GapLayer({ enabled, radiusM = 300, cellM = 500, onError 
       setCells(cells)
       onError?.(null)
     } catch (e) {
-      // The API refuses a bbox needing too many cells. Without this the overlay
-      // would just vanish on zoom-out with no explanation.
       setCells([])
       onError?.(e.message)
     }
@@ -33,9 +31,14 @@ export default function GapLayer({ enabled, radiusM = 300, cellM = 500, onError 
   return cells.map((cell, index) => (
     <Polygon
       key={index}
-      // GeoJSON rings are [lon, lat]; Leaflet wants [lat, lon].
       positions={cell.coordinates[0].map(([lon, lat]) => [lat, lon])}
-      pathOptions={{ color: '#dc2626', weight: 1, fillOpacity: 0.18 }}
+      pathOptions={{
+        color: '#f97316',
+        weight: 0.8,
+        fillColor: '#ef4444',
+        fillOpacity: 0.22,
+        dashArray: '2, 2',
+      }}
     />
   ))
 }

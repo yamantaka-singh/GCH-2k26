@@ -1,37 +1,188 @@
-import { CircleMarker, MapContainer, Popup, TileLayer } from 'react-leaflet'
+import React, { useEffect } from 'react'
+import {
+  Circle,
+  CircleMarker,
+  MapContainer,
+  Popup,
+  TileLayer,
+  Polyline,
+  useMap,
+} from 'react-leaflet'
 import 'leaflet/dist/leaflet.css'
+import { BASEMAPS } from './LayerDock'
+import { SAMPLE_ROUTE } from './VehicleTracker'
 
-const STATUS_COLOUR = { active: '#16a34a', inactive: '#f59e0b', decommissioned: '#6b7280' }
 const GANDHINAGAR = [23.2156, 72.6369]
 
-export default function CameraMap({ geojson, onSelect, children }) {
+const STATUS_COLOURS = {
+  active: '#10b981',        // Emerald
+  inactive: '#f59e0b',      // Amber
+  decommissioned: '#64748b', // Slate
+}
+
+// Map Controller for programmatic flyTo actions
+function MapController({ flyTarget }) {
+  const map = useMap()
+  useEffect(() => {
+    if (flyTarget) {
+      map.flyTo([flyTarget.lat, flyTarget.lon], flyTarget.zoom || 14, {
+        duration: 1.5,
+      })
+    }
+  }, [flyTarget, map])
+  return null
+}
+
+export default function CameraMap({
+  geojson,
+  selectedId,
+  onSelect,
+  activeBasemap = 'dark',
+  showBuffers = false,
+  bufferRadius = 300,
+  showRoute = false,
+  activeRouteStep = 1,
+  flyTarget,
+  children,
+}) {
+  const basemapConfig = BASEMAPS[activeBasemap] || BASEMAPS.dark
+  const routePoints = SAMPLE_ROUTE.map((r) => [r.lat, r.lon])
+
   return (
-    <MapContainer center={GANDHINAGAR} zoom={12} style={{ height: '100%', width: '100%' }}>
+    <MapContainer
+      center={GANDHINAGAR}
+      zoom={11}
+      style={{ height: '100%', width: '100%' }}
+      zoomControl={false}
+    >
+      <MapController flyTarget={flyTarget} />
+
+      {/* Dynamic Basemap Tile Layer */}
       <TileLayer
-        url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-        attribution="&copy; OpenStreetMap contributors"
+        key={activeBasemap}
+        url={basemapConfig.url}
+        attribution={basemapConfig.attribution}
       />
+
+      {/* Optional PostGIS Gap Layer / Children */}
+      {children}
+
+      {/* Camera Coverage Buffers (if enabled) */}
+      {showBuffers &&
+        (geojson?.features ?? []).map((feature) => {
+          const [lon, lat] = feature.geometry.coordinates
+          const { id } = feature.properties
+          return (
+            <Circle
+              key={`buffer-${id}`}
+              center={[lat, lon]}
+              radius={bufferRadius}
+              pathOptions={{
+                color: '#06b6d4',
+                weight: 1,
+                fillColor: '#0891b2',
+                fillOpacity: 0.12,
+                dashArray: '4, 4',
+              }}
+            />
+          )
+        })}
+
+      {/* Camera Pins */}
       {(geojson?.features ?? []).map((feature) => {
-        // GeoJSON is [lon, lat]; Leaflet wants [lat, lon].
         const [lon, lat] = feature.geometry.coordinates
         const { id, name, status, vendor } = feature.properties
+        const isSelected = selectedId === id
+        const color = STATUS_COLOURS[status] ?? '#64748b'
+
         return (
-          <CircleMarker
-            key={id}
-            center={[lat, lon]}
-            radius={6}
-            pathOptions={{ color: STATUS_COLOUR[status] ?? '#6b7280', fillOpacity: 0.85 }}
-            eventHandlers={{ click: () => onSelect?.(id) }}
-          >
-            <Popup>
-              <strong>{name}</strong>
-              <br />
-              {vendor ?? 'unknown vendor'} &middot; {status}
-            </Popup>
-          </CircleMarker>
+          <React.Fragment key={id}>
+            {/* Outer glow ring for selected camera */}
+            {isSelected && (
+              <CircleMarker
+                center={[lat, lon]}
+                radius={14}
+                pathOptions={{
+                  color: '#06b6d4',
+                  fillColor: '#22d3ee',
+                  fillOpacity: 0.25,
+                  weight: 2,
+                }}
+              />
+            )}
+            <CircleMarker
+              center={[lat, lon]}
+              radius={isSelected ? 7 : 5}
+              pathOptions={{
+                color: isSelected ? '#ffffff' : color,
+                fillColor: color,
+                fillOpacity: 0.95,
+                weight: isSelected ? 2.5 : 1.5,
+              }}
+              eventHandlers={{ click: () => onSelect?.(id) }}
+            >
+              <Popup>
+                <div className="text-xs space-y-1">
+                  <div className="font-bold text-slate-100">{name}</div>
+                  <div className="text-[11px] text-slate-400 font-mono">
+                    {vendor || 'Unknown Vendor'} &middot;{' '}
+                    <span
+                      className={
+                        status === 'active' ? 'text-emerald-400 font-semibold' : 'text-amber-400'
+                      }
+                    >
+                      {status}
+                    </span>
+                  </div>
+                </div>
+              </Popup>
+            </CircleMarker>
+          </React.Fragment>
         )
       })}
-      {children}
+
+      {/* Simulated Vehicle Route Trajectory (Test Case) */}
+      {showRoute && (
+        <>
+          <Polyline
+            positions={routePoints}
+            pathOptions={{
+              color: '#f59e0b',
+              weight: 3.5,
+              opacity: 0.85,
+              dashArray: '8, 6',
+            }}
+          />
+          {SAMPLE_ROUTE.map((pt) => {
+            const isActive = activeRouteStep === pt.step
+            return (
+              <CircleMarker
+                key={`route-${pt.step}`}
+                center={[pt.lat, pt.lon]}
+                radius={isActive ? 12 : 7}
+                pathOptions={{
+                  color: isActive ? '#ef4444' : '#f59e0b',
+                  fillColor: isActive ? '#f87171' : '#fbbf24',
+                  fillOpacity: 0.9,
+                  weight: 2,
+                }}
+              >
+                <Popup>
+                  <div className="text-xs space-y-1">
+                    <div className="font-bold text-amber-300">
+                      Waypoint {pt.step}: {pt.city}
+                    </div>
+                    <div className="text-slate-300">{pt.name}</div>
+                    <div className="text-[10px] font-mono text-slate-400">
+                      Sighted: {pt.timestamp} | {pt.speed}
+                    </div>
+                  </div>
+                </Popup>
+              </CircleMarker>
+            )
+          })}
+        </>
+      )}
     </MapContainer>
   )
 }

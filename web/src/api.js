@@ -52,3 +52,6 @@ export function importCsv(departmentId, file) {
   form.append('file', file)
   return request('/cameras/import', { method: 'POST', body: form })
 }
+
+export const createCamera = (data) =>
+  request('/cameras', { method: 'POST', body: JSON.stringify(data) })
