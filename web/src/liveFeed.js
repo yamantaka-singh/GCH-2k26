@@ -1,6 +1,9 @@
 // WHEP (WebRTC-HTTP Egress Protocol) client: native RTCPeerConnection + fetch,
 // no library -- the grid's browser-preview endpoint is a plain WHEP server.
-export function attachWhep(videoEl, whepUrl) {
+// onError, if given, is called when a *linked* camera still fails to connect
+// -- distinct from "not linked at all", so the UI doesn't show a stale LIVE
+// badge over a black frame that never arrived.
+export function attachWhep(videoEl, whepUrl, onError) {
   const pc = new RTCPeerConnection()
   pc.addTransceiver('video', { direction: 'recvonly' })
   pc.ontrack = (e) => { videoEl.srcObject = e.streams[0] }
@@ -32,7 +35,10 @@ export function attachWhep(videoEl, whepUrl) {
     .then((answerSdp) => {
       if (!cancelled) pc.setRemoteDescription({ type: 'answer', sdp: answerSdp })
     })
-    .catch((err) => console.error('live feed connect failed:', err))
+    .catch((err) => {
+      console.error('live feed connect failed:', err)
+      if (!cancelled) onError?.(err)
+    })
 
   // skipped: no DELETE of the WHEP session resource on close -- the grid times
   // out idle sessions server-side; add it if that measurably matters.

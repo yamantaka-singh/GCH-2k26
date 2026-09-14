@@ -53,7 +53,11 @@ export default function CameraInspector({
     let cancelled = false
     fetchLiveUrl(camera.id)
       .then(({ whep_url }) => {
-        if (!cancelled) detach = attachWhep(videoRef.current, whep_url)
+        if (!cancelled) {
+          detach = attachWhep(videoRef.current, whep_url, () => {
+            if (!cancelled) setFeedError('Linked, but the feed is not responding.')
+          })
+        }
       })
       .catch(() => { if (!cancelled) setFeedError('No live grid feed linked to this camera.') })
     return () => { cancelled = true; detach() }
