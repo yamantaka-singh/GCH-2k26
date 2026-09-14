@@ -25,6 +25,7 @@ on-screen clock overlay is unrelated to when this script actually read it.
 import argparse
 import csv
 import datetime as dt
+import json
 import os
 import re
 import sys
@@ -201,7 +202,6 @@ def main() -> int:
         return 1
 
     unique_counts = {k: len(v) for k, v in unique_tracks.items()}
-    import json
     (out / "summary.json").write_text(json.dumps({
         "source": args.source, "analysed_frames": analysed, "duration_s": round(elapsed, 1),
         "unique_vehicles": unique_counts, "detection_rows": row_counts,
