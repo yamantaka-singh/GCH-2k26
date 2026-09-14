@@ -20,7 +20,7 @@ export default function CameraTable({ cameras, onSelect, selectedId }) {
             }}
           >
             <td style={{ padding: 6 }}>{camera.name}</td>
-            <td style={{ padding: 6 }}>{camera.vendor ?? '—'}</td>
+            <td style={{ padding: 6 }}>{camera.vendor ?? '-'}</td>
             <td style={{ padding: 6 }}>{camera.kind}</td>
             <td style={{ padding: 6 }}>{camera.status}</td>
           </tr>

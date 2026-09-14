@@ -18,6 +18,8 @@ import CameraInspector from './components/CameraInspector'
 import LayerDock from './components/LayerDock'
 import VehicleTracker, { SAMPLE_ROUTE } from './components/VehicleTracker'
 import CameraOnboardingModal from './components/CameraOnboardingModal'
+import VideoWall from './components/VideoWall'
+import CommandPalette from './components/CommandPalette'
 import { Shield, Lock, Mail, AlertCircle, ArrowRight } from 'lucide-react'
 
 export default function App() {
@@ -44,7 +46,11 @@ export default function App() {
   const [importReport, setImportReport] = useState(null)
   const [flyTarget, setFlyTarget] = useState(null)
 
-  // Map & Layer states (SkyFi style)
+  // View Mode & Command Palette
+  const [viewMode, setViewMode] = useState('map') // 'map' | 'matrix'
+  const [commandPaletteOpen, setCommandPaletteOpen] = useState(false)
+
+  // Map & Layer states
   const [activeBasemap, setActiveBasemap] = useState('dark')
   const [showBuffers, setShowBuffers] = useState(false)
   const [bufferRadius, setBufferRadius] = useState(300)
@@ -54,6 +60,18 @@ export default function App() {
   // Vehicle Tracking Test Scenario
   const [showRoute, setShowRoute] = useState(false)
   const [activeRouteStep, setActiveRouteStep] = useState(1)
+
+  // Global Keyboard Shortcuts (Cmd+K / Ctrl+K)
+  useEffect(() => {
+    const handleKeyDown = (e) => {
+      if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'k') {
+        e.preventDefault()
+        setCommandPaletteOpen((prev) => !prev)
+      }
+    }
+    window.addEventListener('keydown', handleKeyDown)
+    return () => window.removeEventListener('keydown', handleKeyDown)
+  }, [])
 
   // Fetch initial data on auth
   useEffect(() => {
@@ -249,34 +267,17 @@ export default function App() {
           </form>
 
           <div className="mt-8 pt-4 border-t border-white/[0.06] text-center text-[10px] text-slate-500 font-mono tracking-wider uppercase">
-            GPIC 2026 &middot; Model 1 Baseline &middot; PostGIS 16
+            GPIC 2026 · Model 1 Baseline · PostGIS 16
           </div>
         </div>
       </div>
     )
   }
 
-  // 2. Authenticated Edge-to-Edge SkyFi Command Platform
+  // 2. Authenticated Command Platform
   return (
-    <div className="relative w-screen h-screen overflow-hidden bg-slate-950 font-sans select-none">
-      {/* Edge-to-Edge Leaflet Canvas */}
-      <div className="absolute inset-0 z-0">
-        <CameraMap
-          geojson={geojson}
-          selectedId={selectedId}
-          onSelect={handleSelectCamera}
-          activeBasemap={activeBasemap}
-          showBuffers={showBuffers}
-          bufferRadius={bufferRadius}
-          showRoute={showRoute}
-          activeRouteStep={activeRouteStep}
-          flyTarget={flyTarget}
-        >
-          <GapLayer enabled={showGaps} radiusM={bufferRadius} onError={setGapError} />
-        </CameraMap>
-      </div>
-
-      {/* Floating Top Navigation Header */}
+    <div className="relative w-screen h-screen overflow-hidden bg-[#08090c] font-sans select-none">
+      {/* Top Command Bar */}
       <TopBar
         summary={summary}
         searchQuery={searchQuery}
@@ -293,57 +294,117 @@ export default function App() {
             setFlyTarget({ lat: SAMPLE_ROUTE[0].lat, lon: SAMPLE_ROUTE[0].lon, zoom: 12 })
           }
         }}
+        viewMode={viewMode}
+        onSwitchView={setViewMode}
+        onOpenCommandPalette={() => setCommandPaletteOpen(true)}
         onLogout={handleLogout}
         totalCameras={cameras.length}
       />
 
-      {/* Floating Left Collapsible Camera Inventory Drawer */}
-      <SidebarDrawer
-        cameras={filteredCameras}
-        selectedId={selectedId}
-        onSelectCamera={handleSelectCamera}
-        isOpen={sidebarOpen}
-        onToggle={() => setSidebarOpen(!sidebarOpen)}
-        departments={departments}
-      />
+      {/* Main Viewport: Multi-Cam Matrix (Video Wall) OR Tactical GIS Map */}
+      {viewMode === 'matrix' ? (
+        <div className="absolute inset-0 z-0 pt-16">
+          <VideoWall
+            cameras={filteredCameras}
+            departments={departments}
+            onSelectCamera={(cam) => {
+              handleSelectCamera(cam.id)
+              setViewMode('map')
+            }}
+            onSwitchToMap={() => setViewMode('map')}
+          />
+        </div>
+      ) : (
+        <>
+          {/* Tactical Leaflet Canvas */}
+          <div className="absolute inset-0 z-0">
+            <CameraMap
+              geojson={geojson}
+              selectedId={selectedId}
+              onSelect={handleSelectCamera}
+              activeBasemap={activeBasemap}
+              showBuffers={showBuffers}
+              bufferRadius={bufferRadius}
+              showRoute={showRoute}
+              activeRouteStep={activeRouteStep}
+              flyTarget={flyTarget}
+            >
+              <GapLayer enabled={showGaps} radiusM={bufferRadius} onError={setGapError} />
+            </CameraMap>
+          </div>
 
-      {/* Floating Right Deep Camera Telemetry & Stream Inspector */}
-      {selectedCameraData && (
-        <CameraInspector
-          camera={selectedCameraData}
-          health={
-            summary?.recent_checks?.[selectedCameraData.id] || {
-              reachable: selectedCameraData.status === 'active',
-              latency_ms: 22,
-            }
-          }
-          onClose={() => setSelectedId(null)}
-          onCenterMap={handleCenterMap}
-          departments={departments}
-        />
+          {/* Left Collapsible Camera Inventory Drawer */}
+          <SidebarDrawer
+            cameras={filteredCameras}
+            selectedId={selectedId}
+            onSelectCamera={handleSelectCamera}
+            isOpen={sidebarOpen}
+            onToggle={() => setSidebarOpen(!sidebarOpen)}
+            departments={departments}
+          />
+
+          {/* Right Deep Camera Telemetry & Real Stream Inspector */}
+          {selectedCameraData && (
+            <CameraInspector
+              camera={selectedCameraData}
+              health={
+                summary?.recent_checks?.[selectedCameraData.id] || {
+                  reachable: selectedCameraData.status === 'active',
+                  latency_ms: 22,
+                }
+              }
+              onClose={() => setSelectedId(null)}
+              onCenterMap={handleCenterMap}
+              departments={departments}
+            />
+          )}
+
+          {/* Floating Bottom Basemap & Spatial Layer Dock */}
+          <LayerDock
+            activeBasemap={activeBasemap}
+            onSelectBasemap={setActiveBasemap}
+            showBuffers={showBuffers}
+            onToggleBuffers={() => setShowBuffers(!showBuffers)}
+            bufferRadius={bufferRadius}
+            onBufferRadiusChange={setBufferRadius}
+            showGaps={showGaps}
+            onToggleGaps={() => setShowGaps(!showGaps)}
+            showRoute={showRoute}
+            onToggleRoute={() => setShowRoute(!showRoute)}
+          />
+
+          {/* Floating Bottom-Left Vehicle Movement & Watchlist Alert Dock */}
+          <VehicleTracker
+            isOpen={showRoute}
+            onClose={() => setShowRoute(false)}
+            activeStep={activeRouteStep}
+            onStepChange={setActiveRouteStep}
+            onFlyTo={handleCenterMap}
+          />
+        </>
       )}
 
-      {/* Floating Bottom-Center Basemap & Spatial Layer Dock */}
-      <LayerDock
-        activeBasemap={activeBasemap}
-        onSelectBasemap={setActiveBasemap}
-        showBuffers={showBuffers}
-        onToggleBuffers={() => setShowBuffers(!showBuffers)}
-        bufferRadius={bufferRadius}
-        onBufferRadiusChange={setBufferRadius}
-        showGaps={showGaps}
-        onToggleGaps={() => setShowGaps(!showGaps)}
-        showRoute={showRoute}
-        onToggleRoute={() => setShowRoute(!showRoute)}
-      />
-
-      {/* Floating Bottom-Left Vehicle Movement & Watchlist Alert Dock */}
-      <VehicleTracker
-        isOpen={showRoute}
-        onClose={() => setShowRoute(false)}
-        activeStep={activeRouteStep}
-        onStepChange={setActiveRouteStep}
-        onFlyTo={handleCenterMap}
+      {/* Global Command Palette (⌘K) */}
+      <CommandPalette
+        isOpen={commandPaletteOpen}
+        onClose={() => setCommandPaletteOpen(false)}
+        cameras={cameras}
+        departments={departments}
+        onSelectCamera={(cam) => {
+          handleSelectCamera(cam.id)
+          setViewMode('map')
+        }}
+        onSwitchView={(mode) => {
+          if (mode === 'trace') {
+            setShowRoute(true)
+            setViewMode('map')
+          } else {
+            setViewMode(mode)
+          }
+        }}
+        onToggleGaps={() => setShowGaps((prev) => !prev)}
+        onOpenOnboard={() => setOnboardingOpen(true)}
+        onSwitchBasemap={(b) => setActiveBasemap(b)}
       />
 
       {/* Camera Onboarding Modal (CSV Bulk Dropzone & Manual Form) */}

@@ -23,7 +23,7 @@ async def run():
         )
         page = await context.new_page()
 
-        print("1. Loading SkyFi Cyber Login Portal...")
+        print("1. Loading Tactical Authentication Portal...")
         await page.goto("http://localhost:5173")
         await page.wait_for_timeout(1500)
         await page.screenshot(path="demo_media/01_skyfi_login.png")
@@ -34,12 +34,34 @@ async def run():
         await page.wait_for_timeout(2500)
         await page.screenshot(path="demo_media/02_skyfi_dashboard.png")
 
-        print("3. Inspecting Camera Stream & Deep Telemetry Flyout...")
-        # Click on the first camera card in the sidebar
+        print("3. Inspecting Real Surveillance Stream & Optical Filters...")
         first_card = page.locator("[data-testid='camera-card']").first
         if await first_card.count() > 0:
             await first_card.click()
-            await page.wait_for_timeout(2500)
+            await page.wait_for_timeout(2000)
+
+            # Test Optical Filters (NVG -> FLIR -> Normal)
+            nvg_btn = page.locator("button:has-text('NVG')")
+            if await nvg_btn.count() > 0:
+                await nvg_btn.click()
+                await page.wait_for_timeout(1000)
+
+            flir_btn = page.locator("button:has-text('FLIR')")
+            if await flir_btn.count() > 0:
+                await flir_btn.click()
+                await page.wait_for_timeout(1000)
+
+            # Test PTZ Zoom
+            zoom_btn = page.locator("button:has-text('1.5X')")
+            if await zoom_btn.count() > 0:
+                await zoom_btn.click()
+                await page.wait_for_timeout(1000)
+
+            norm_btn = page.locator("button:has-text('NORM')")
+            if await norm_btn.count() > 0:
+                await norm_btn.click()
+                await page.wait_for_timeout(1000)
+
             await page.screenshot(path="demo_media/03_skyfi_camera_inspector.png")
 
         print("4. Testing Multi-Basemap Switching (Esri Satellite)...")
@@ -55,29 +77,45 @@ async def run():
             await dark_btn.click()
             await page.wait_for_timeout(1500)
 
-        print("5. Toggling PostGIS Spatial Coverage Gaps & Buffers...")
-        gaps_btn = page.locator("button:has-text('Gap Grid')")
-        if await gaps_btn.count() > 0:
-            await gaps_btn.click()
-        buffers_btn = page.locator("button:has-text('Buffers')")
-        if await buffers_btn.count() > 0:
-            await buffers_btn.click()
-        await page.wait_for_timeout(3000)
-        await page.screenshot(path="demo_media/05_skyfi_gap_heatmap.png")
+        print("5. Launching Multi-Camera Surveillance Video Wall Matrix...")
+        wall_btn = page.locator("button:has-text('VIDEO WALL')")
+        if await wall_btn.count() > 0:
+            await wall_btn.click()
+            await page.wait_for_timeout(3000)
+            await page.screenshot(path="demo_media/05_skyfi_video_wall.png")
 
-        print("6. Demonstrating Hackathon Vehicle Tracker & Watchlist Match...")
-        trace_btn = page.get_by_role("button", name="Vehicle Trace")
+            # Click second camera tile to jump back to map
+            wall_tile = page.locator(".grid > div").nth(1)
+            if await wall_tile.count() > 0:
+                await wall_tile.click()
+                await page.wait_for_timeout(2500)
+
+        print("6. Demonstrating Universal Command Palette (⌘K)...")
+        cmd_btn = page.locator("button:has-text('⌘K')")
+        if await cmd_btn.count() > 0:
+            await cmd_btn.click()
+            await page.wait_for_timeout(800)
+            cmd_input = page.locator("input[placeholder*='Type a camera name']")
+            if await cmd_input.count() > 0:
+                await cmd_input.fill("Sector 18")
+                await page.wait_for_timeout(1000)
+            await page.screenshot(path="demo_media/06_skyfi_command_palette.png")
+            await page.keyboard.press("Escape")
+            await page.wait_for_timeout(1000)
+
+        print("7. Demonstrating Vehicle Tracker & PostGIS Gap Analysis...")
+        trace_btn = page.locator("button:has-text('Vehicle Trace')")
         if await trace_btn.count() > 0:
             await trace_btn.click()
             await page.wait_for_timeout(2500)
-            await page.screenshot(path="demo_media/06_skyfi_vehicle_trace.png")
+            await page.screenshot(path="demo_media/07_skyfi_vehicle_trace.png")
 
-        print("7. Opening Glassmorphic Onboarding Modal...")
+        print("8. Opening Camera Onboarding Modal...")
         onboard_btn = page.get_by_role("button", name="Onboard")
         if await onboard_btn.count() > 0:
             await onboard_btn.click()
             await page.wait_for_timeout(2000)
-            await page.screenshot(path="demo_media/07_skyfi_onboarding_modal.png")
+            await page.screenshot(path="demo_media/08_skyfi_onboarding_modal.png")
 
         # Smooth concluding view
         close_modal = page.locator("div[role='dialog'] button, .fixed.inset-0 button").first

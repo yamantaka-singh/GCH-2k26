@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, useRef } from 'react'
 import {
   X,
   Radio,
@@ -7,8 +7,18 @@ import {
   Check,
   Crosshair,
   RefreshCw,
-  Sliders,
+  Eye,
+  ZoomIn,
+  Shield,
+  Layers,
 } from 'lucide-react'
+
+// Authentic traffic CCTV video clips mapped deterministically
+const VIDEO_FEEDS = [
+  '/videos/traffic_junction_1.mp4',
+  '/videos/traffic_junction_2.mp4',
+  '/videos/traffic_highway_3.mp4',
+]
 
 export default function CameraInspector({
   camera,
@@ -20,19 +30,54 @@ export default function CameraInspector({
   const [copied, setCopied] = useState(false)
   const [probing, setProbing] = useState(false)
   const [simulatedPing, setSimulatedPing] = useState(health?.latency_ms || 22)
-  const [timeStr, setTimeStr] = useState(new Date().toUTCString().slice(17, 25))
+  const [timeStr, setTimeStr] = useState('')
+  const [opticalMode, setOpticalMode] = useState('normal') // 'normal' | 'nvg' | 'thermal'
+  const [zoomLevel, setZoomLevel] = useState(1.0) // 1.0 | 1.5 | 2.0
+  const [plateTrack, setPlateTrack] = useState({
+    x: 48,
+    y: 52,
+    plate: 'GJ-01-AB-1234',
+    conf: 98.6,
+  })
 
+  const videoRef = useRef(null)
+
+  // Real-time UTC millisecond timecode ticker
   useEffect(() => {
-    const timer = setInterval(() => {
-      setTimeStr(new Date().toUTCString().slice(17, 25))
-    }, 1000)
-    return () => clearInterval(timer)
+    const updateTime = () => {
+      const now = new Date()
+      const utc = now.toISOString().replace('T', ' ').slice(0, 23)
+      setTimeStr(`${utc} UTC`)
+    }
+    updateTime()
+    const interval = setInterval(updateTime, 100)
+    return () => clearInterval(interval)
   }, [])
+
+  // Dynamic simulated vehicle bounding box track movement across video
+  useEffect(() => {
+    const plates = ['GJ-01-AB-1234', 'GJ-05-BX-9081', 'GJ-18-CZ-4521', 'GJ-27-K-8812']
+    let step = 0
+    const trackInterval = setInterval(() => {
+      step = (step + 1) % 100
+      const progress = (step % 20) / 20
+      setPlateTrack({
+        x: 35 + progress * 24,
+        y: 42 + Math.sin(progress * Math.PI) * 10,
+        plate: plates[Math.floor(step / 25) % plates.length],
+        conf: +(96.5 + Math.sin(step) * 2.8).toFixed(1),
+      })
+    }, 400)
+    return () => clearInterval(trackInterval)
+  }, [camera?.id])
 
   if (!camera) return null
 
   const dept = (departments || []).find((d) => d.id === camera.department_id)
   const isOnline = health?.reachable ?? (camera.status === 'active')
+
+  // Deterministic video feed for this camera
+  const videoSrc = VIDEO_FEEDS[Math.abs(camera.id || 1) % VIDEO_FEEDS.length]
 
   const copyRtsp = () => {
     if (!camera.rtsp_url) return
@@ -49,9 +94,16 @@ export default function CameraInspector({
     }, 600)
   }
 
+  // Determine optical filter class
+  const getFilterClass = () => {
+    if (opticalMode === 'nvg') return 'filter-optical-nvg'
+    if (opticalMode === 'thermal') return 'filter-optical-thermal'
+    return 'filter-optical-normal'
+  }
+
   return (
-    <aside className="fixed top-18 right-3 bottom-4 z-[950] w-[390px] titanium-glass rounded-2xl flex flex-col overflow-hidden animate-in slide-in-from-right duration-200">
-      {/* Drawer Header */}
+    <aside className="fixed top-18 right-3 bottom-4 z-[950] w-[410px] titanium-glass rounded-2xl flex flex-col overflow-hidden animate-in slide-in-from-right duration-200">
+      {/* Header */}
       <div className="p-3.5 border-b border-white/[0.06] flex items-center justify-between">
         <div className="flex items-center gap-2 min-w-0">
           <div className="flex items-center justify-center w-7 h-7 rounded-lg bg-white/[0.04] border border-white/[0.08] text-white">
@@ -62,7 +114,7 @@ export default function CameraInspector({
               {camera.name}
             </h3>
             <span className="text-[10px] font-mono text-slate-400 uppercase tracking-wider">
-              {camera.external_ref || `NODE-${camera.id}`} &middot; {dept?.code || 'GOV'}
+              {camera.external_ref || `NODE-${camera.id}`} · {dept?.code || 'GOV'}
             </span>
           </div>
         </div>
@@ -75,47 +127,137 @@ export default function CameraInspector({
         </button>
       </div>
 
-      {/* Drawer Content */}
+      {/* Content */}
       <div className="flex-1 overflow-y-auto p-3.5 space-y-3">
-        {/* Optical Stream Viewport (Minimalist Broadcast Feed) */}
-        <div className="relative aspect-video rounded-xl bg-[#06070a] border border-white/[0.08] overflow-hidden flex flex-col justify-between p-2.5 shadow-inner">
-          {/* Subtle grid backdrop */}
-          <div className="absolute inset-0 bg-[linear-gradient(to_right,rgba(255,255,255,0.02)_1px,transparent_1px),linear-gradient(to_bottom,rgba(255,255,255,0.02)_1px,transparent_1px)] bg-[size:1.5rem_1.5rem] pointer-events-none" />
+        {/* Real Video Surveillance Viewport */}
+        <div className="relative aspect-video rounded-xl bg-[#06070a] border border-white/[0.1] overflow-hidden flex flex-col justify-between shadow-2xl">
+          {/* Real Video Player */}
+          <div className="absolute inset-0 overflow-hidden">
+            <video
+              ref={videoRef}
+              src={videoSrc}
+              autoPlay
+              loop
+              muted
+              playsInline
+              className={`w-full h-full object-cover transition-all duration-300 ${getFilterClass()}`}
+              style={{
+                transform: `scale(${zoomLevel})`,
+                transformOrigin: 'center center',
+              }}
+            />
+          </div>
 
-          {/* Stream Header Overlay */}
-          <div className="relative z-10 flex items-center justify-between text-[10px] font-mono">
-            <div className="flex items-center gap-1.5 px-2 py-0.5 rounded bg-black/60 border border-white/[0.08] text-slate-300">
+          {/* Optical Scanline Texture Overlay */}
+          <div className="absolute inset-0 bg-[linear-gradient(rgba(18,16,16,0)_50%,rgba(0,0,0,0.25)_50%)] bg-[length:100%_4px] pointer-events-none opacity-40 z-10" />
+
+          {/* Top Live Video HUD */}
+          <div className="relative z-20 p-2.5 flex items-center justify-between text-[10px] font-mono">
+            <div className="flex items-center gap-1.5 px-2 py-0.5 rounded bg-black/75 backdrop-blur-md border border-white/[0.1] text-slate-200">
               <span className="w-1.5 h-1.5 rounded-full bg-rose-500 animate-pulse" />
-              <span className="tracking-widest uppercase">OPTICAL STREAM</span>
+              <span className="tracking-widest font-semibold uppercase">
+                {opticalMode === 'normal' && 'LIVE OPTICAL'}
+                {opticalMode === 'nvg' && 'NVG PHOSPHOR'}
+                {opticalMode === 'thermal' && 'FLIR THERMAL'}
+              </span>
             </div>
-            <span className="text-slate-400 bg-black/60 px-1.5 py-0.5 rounded border border-white/[0.05]">
-              {timeStr} UTC
+            <span className="text-slate-300 bg-black/75 backdrop-blur-md px-2 py-0.5 rounded border border-white/[0.1] tabular-nums text-[9px]">
+              {timeStr}
             </span>
           </div>
 
-          {/* Minimalist ANPR Hairline Bounding Box */}
-          <div className="relative z-10 self-center my-auto flex flex-col items-center">
-            <div className="w-36 h-18 border border-white/40 rounded relative flex items-end justify-center bg-white/[0.02]">
-              {/* Precision Corner Brackets */}
+          {/* Dynamic Computer Vision ANPR Bounding Box HUD */}
+          <div
+            className="absolute z-20 pointer-events-none transition-all duration-300 ease-out"
+            style={{
+              left: `${plateTrack.x}%`,
+              top: `${plateTrack.y}%`,
+              transform: 'translate(-50%, -50%)',
+            }}
+          >
+            <div className="w-28 h-14 border border-white/70 relative flex items-end justify-center bg-white/[0.04] shadow-lg">
+              {/* Reticle Corner Brackets */}
               <div className="absolute -top-1 -left-1 w-2 h-2 border-t-2 border-l-2 border-white" />
               <div className="absolute -top-1 -right-1 w-2 h-2 border-t-2 border-r-2 border-white" />
               <div className="absolute -bottom-1 -left-1 w-2 h-2 border-b-2 border-l-2 border-white" />
               <div className="absolute -bottom-1 -right-1 w-2 h-2 border-b-2 border-r-2 border-white" />
 
-              <span className="absolute -top-3.5 left-1 text-[8px] font-mono bg-black/80 text-white px-1 border border-white/[0.2] rounded tracking-wider">
-                TARGET VEHICLE &bull; 98.6%
+              {/* Header Label */}
+              <span className="absolute -top-3.5 left-0 text-[8px] font-mono bg-black/90 text-white px-1 border border-white/30 rounded tracking-wider">
+                ANPR · {plateTrack.conf}%
               </span>
-              <span className="text-[9px] font-mono text-white bg-black/90 px-1.5 py-0.5 mb-1.5 rounded border border-white/[0.2] tracking-wider font-semibold">
-                GJ-01-AB-1234
+
+              {/* License Plate Text */}
+              <span className="text-[9px] font-mono text-white bg-black/95 px-1.5 py-0.5 mb-1 rounded border border-white/30 tracking-widest font-bold">
+                {plateTrack.plate}
               </span>
             </div>
           </div>
 
-          {/* Stream Telemetry Footer */}
-          <div className="relative z-10 flex items-center justify-between text-[9px] font-mono text-slate-400 bg-black/80 px-2 py-1 rounded border border-white/[0.08]">
-            <span>{camera.resolution || '1080p'} &bull; {camera.fps || 25} FPS</span>
+          {/* Bottom Stream Telemetry Strip */}
+          <div className="relative z-20 m-2 flex items-center justify-between text-[9px] font-mono text-slate-300 bg-black/80 backdrop-blur-md px-2.5 py-1 rounded-lg border border-white/[0.1]">
+            <span>{camera.resolution || '1080p'} · {camera.fps || 25} FPS</span>
             <span>H.264 / TCP</span>
             <span className="text-white font-semibold">4.2 Mbps</span>
+          </div>
+        </div>
+
+        {/* Optical Sensor Controls (Filter Modes & Digital PTZ Zoom) */}
+        <div className="p-2.5 rounded-xl bg-white/[0.02] border border-white/[0.06] space-y-2">
+          <div className="flex items-center justify-between text-[10px] font-mono text-slate-400">
+            <span className="flex items-center gap-1.5 uppercase tracking-wider">
+              <Eye className="w-3 h-3 text-slate-300" />
+              <span>Optical Filter</span>
+            </span>
+            <span className="flex items-center gap-1.5 uppercase tracking-wider">
+              <ZoomIn className="w-3 h-3 text-slate-300" />
+              <span>PTZ Zoom</span>
+            </span>
+          </div>
+
+          <div className="flex items-center justify-between gap-2">
+            {/* Filter Toggle Pills */}
+            <div className="flex items-center p-0.5 rounded-lg bg-black/60 border border-white/[0.08] text-[10px] font-mono">
+              <button
+                onClick={() => setOpticalMode('normal')}
+                className={`px-2 py-0.5 rounded transition cursor-pointer ${
+                  opticalMode === 'normal' ? 'bg-white text-zinc-950 font-semibold shadow-sm' : 'text-slate-400 hover:text-white'
+                }`}
+              >
+                NORM
+              </button>
+              <button
+                onClick={() => setOpticalMode('nvg')}
+                className={`px-2 py-0.5 rounded transition cursor-pointer ${
+                  opticalMode === 'nvg' ? 'bg-emerald-500 text-black font-semibold shadow-sm' : 'text-slate-400 hover:text-white'
+                }`}
+              >
+                NVG
+              </button>
+              <button
+                onClick={() => setOpticalMode('thermal')}
+                className={`px-2 py-0.5 rounded transition cursor-pointer ${
+                  opticalMode === 'thermal' ? 'bg-rose-500 text-white font-semibold shadow-sm' : 'text-slate-400 hover:text-white'
+                }`}
+              >
+                FLIR
+              </button>
+            </div>
+
+            {/* PTZ Zoom Toggle Pills */}
+            <div className="flex items-center p-0.5 rounded-lg bg-black/60 border border-white/[0.08] text-[10px] font-mono">
+              {[1.0, 1.5, 2.0].map((level) => (
+                <button
+                  key={level}
+                  onClick={() => setZoomLevel(level)}
+                  className={`px-2 py-0.5 rounded transition cursor-pointer ${
+                    zoomLevel === level ? 'bg-white text-zinc-950 font-semibold shadow-sm' : 'text-slate-400 hover:text-white'
+                  }`}
+                >
+                  {level.toFixed(1)}X
+                </button>
+              ))}
+            </div>
           </div>
         </div>
 
@@ -123,7 +265,7 @@ export default function CameraInspector({
         <div className="p-3 rounded-xl bg-white/[0.02] border border-white/[0.06] space-y-2">
           <div className="flex items-center justify-between">
             <span className="text-[10px] font-mono uppercase tracking-widest text-slate-400">
-              TELEMETRY & REACHABILITY
+              TELEMETRY AND REACHABILITY
             </span>
             <button
               onClick={handleProbe}
@@ -193,7 +335,7 @@ export default function CameraInspector({
             <div className="flex items-center justify-between py-1 border-b border-white/[0.04]">
               <span className="text-slate-400">Retention Strategy</span>
               <span className="font-medium text-white capitalize">
-                {camera.storage || 'Cloud Archive'} &middot; {camera.retention_days || 15}d
+                {camera.storage || 'Cloud Archive'} · {camera.retention_days || 15}d
               </span>
             </div>
 
@@ -228,9 +370,9 @@ export default function CameraInspector({
         {/* Bottom Actions */}
         <button
           onClick={() => onCenterMap(camera.lat, camera.lon)}
-          className="w-full flex items-center justify-center gap-2 py-2 rounded-xl bg-white/[0.06] hover:bg-white/[0.1] text-xs font-semibold text-white border border-white/[0.1] transition cursor-pointer active:scale-[0.99]"
+          className="w-full flex items-center justify-center gap-2 py-2 rounded-xl bg-white text-zinc-950 hover:bg-zinc-200 text-xs font-semibold transition cursor-pointer active:scale-[0.99] shadow-lg"
         >
-          <Crosshair className="w-3.5 h-3.5 text-zinc-200" />
+          <Crosshair className="w-3.5 h-3.5 text-zinc-950" />
           <span>Locate on Map</span>
         </button>
       </div>

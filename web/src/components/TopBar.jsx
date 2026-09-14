@@ -5,7 +5,9 @@ import {
   Plus,
   Compass,
   LogOut,
-  SlidersHorizontal,
+  Map,
+  Grid,
+  Route,
 } from 'lucide-react'
 
 export default function TopBar({
@@ -18,6 +20,9 @@ export default function TopBar({
   onOpenOnboarding,
   trackingActive,
   onToggleTracking,
+  viewMode = 'map', // 'map' | 'matrix'
+  onSwitchView,
+  onOpenCommandPalette,
   onLogout,
   totalCameras,
 }) {
@@ -31,7 +36,7 @@ export default function TopBar({
           </div>
           <div>
             <div className="flex items-center gap-2">
-              <span className="font-semibold tracking-tight text-sm text-white">
+              <span className="font-semibold tracking-tight text-sm text-white font-sans">
                 SENTINEL
               </span>
               <span className="text-[10px] px-1.5 py-0.2 rounded bg-white/[0.06] text-slate-300 font-mono border border-white/[0.08] uppercase tracking-wider">
@@ -39,7 +44,7 @@ export default function TopBar({
               </span>
             </div>
             <p className="text-[10px] text-slate-400 font-mono tracking-tight uppercase">
-              Gujarat Police &middot; GIS Registry
+              Gujarat Police · GIS Registry
             </p>
           </div>
         </div>
@@ -52,13 +57,13 @@ export default function TopBar({
               <span className="font-medium text-white">{summary.reachable}</span>
               <span className="text-[10px] text-slate-500 uppercase tracking-wider">online</span>
             </div>
-            <span className="text-white/[0.1]">&bull;</span>
+            <span className="text-white/[0.1]">·</span>
             <div className="flex items-center gap-1.5 text-slate-200">
               <span className="w-1.5 h-1.5 rounded-full bg-rose-500" />
               <span className="font-medium text-white">{summary.unreachable}</span>
               <span className="text-[10px] text-slate-500 uppercase tracking-wider">alert</span>
             </div>
-            <span className="text-white/[0.1]">&bull;</span>
+            <span className="text-white/[0.1]">·</span>
             <div className="flex items-center gap-1.5 text-slate-200">
               <span className="w-1.5 h-1.5 rounded-full bg-slate-500" />
               <span className="font-medium text-white">{summary.unknown}</span>
@@ -68,9 +73,9 @@ export default function TopBar({
         )}
       </div>
 
-      {/* Middle: Search & Department Chips */}
+      {/* Middle: Search & View Mode Switcher */}
       <div className="flex items-center gap-3 max-w-xl w-full mx-4">
-        {/* Search */}
+        {/* Search with Command Palette trigger */}
         <div className="relative flex-1">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-slate-500 pointer-events-none" />
           <input
@@ -78,18 +83,48 @@ export default function TopBar({
             value={searchQuery}
             onChange={(e) => onSearchChange(e.target.value)}
             placeholder="Filter by camera ID, IP, vendor, corridor..."
-            className="w-full pl-8 pr-10 py-1.5 rounded-xl text-xs titanium-input"
+            className="w-full pl-8 pr-12 py-1.5 rounded-xl text-xs titanium-input"
           />
-          <span className="absolute right-2.5 top-1/2 -translate-y-1/2 px-1.5 py-0.5 rounded text-[9px] font-mono text-slate-500 border border-white/[0.08] bg-white/[0.02]">
+          <button
+            onClick={onOpenCommandPalette}
+            className="absolute right-2 top-1/2 -translate-y-1/2 px-1.5 py-0.5 rounded text-[9px] font-mono text-slate-400 border border-white/[0.1] bg-white/[0.04] hover:bg-white/[0.1] hover:text-white transition cursor-pointer"
+            title="Open Command Palette (⌘K)"
+          >
             ⌘K
-          </span>
+          </button>
+        </div>
+
+        {/* View Mode Switcher */}
+        <div className="flex items-center p-0.5 rounded-xl bg-white/[0.03] border border-white/[0.06] text-xs font-mono">
+          <button
+            onClick={() => onSwitchView('map')}
+            className={`flex items-center gap-1.5 px-2.5 py-1 rounded-lg transition cursor-pointer ${
+              viewMode === 'map'
+                ? 'bg-white text-zinc-950 font-semibold shadow-sm'
+                : 'text-slate-400 hover:text-slate-200'
+            }`}
+          >
+            <Map className="w-3.5 h-3.5" />
+            <span className="hidden sm:inline">GIS MAP</span>
+          </button>
+          <button
+            onClick={() => onSwitchView('matrix')}
+            className={`flex items-center gap-1.5 px-2.5 py-1 rounded-lg transition cursor-pointer ${
+              viewMode === 'matrix'
+                ? 'bg-white text-zinc-950 font-semibold shadow-sm'
+                : 'text-slate-400 hover:text-slate-200'
+            }`}
+          >
+            <Grid className="w-3.5 h-3.5" />
+            <span className="hidden sm:inline">VIDEO WALL</span>
+          </button>
         </div>
 
         {/* Department Segmented Control */}
-        <div className="hidden xl:flex items-center gap-0.5 bg-white/[0.03] p-1 rounded-xl border border-white/[0.06]">
+        <div className="hidden 2xl:flex items-center gap-0.5 bg-white/[0.03] p-1 rounded-xl border border-white/[0.06]">
           <button
             onClick={() => onSelectDept(null)}
-            className={`px-2.5 py-1 rounded-lg text-xs font-mono transition-all ${
+            className={`px-2 py-0.5 rounded-lg text-xs font-mono transition-all ${
               selectedDept === null
                 ? 'bg-white text-zinc-950 font-semibold shadow-sm'
                 : 'text-slate-400 hover:text-slate-200 hover:bg-white/[0.04]'
@@ -101,7 +136,7 @@ export default function TopBar({
             <button
               key={dept.id}
               onClick={() => onSelectDept(dept.id)}
-              className={`px-2 py-1 rounded-lg text-xs font-mono transition-all ${
+              className={`px-2 py-0.5 rounded-lg text-xs font-mono transition-all ${
                 selectedDept === dept.id
                   ? 'bg-white text-zinc-950 font-semibold shadow-sm'
                   : 'text-slate-400 hover:text-slate-200 hover:bg-white/[0.04]'
@@ -118,7 +153,7 @@ export default function TopBar({
         {/* Vehicle Tracker Toggle */}
         <button
           onClick={onToggleTracking}
-          className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-mono uppercase tracking-wider transition-all border ${
+          className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-mono uppercase tracking-wider transition-all border cursor-pointer ${
             trackingActive
               ? 'bg-amber-500/10 border-amber-500/50 text-amber-300 shadow-[inset_0_1px_0_0_rgba(245,158,11,0.2)]'
               : 'bg-white/[0.03] border-white/[0.08] text-slate-300 hover:text-white hover:bg-white/[0.06]'
@@ -126,7 +161,7 @@ export default function TopBar({
           title="Toggle Vehicle Trajectory & Watchlist Sighting Test Case"
         >
           <Compass className="w-3.5 h-3.5 text-amber-400" />
-          <span>Vehicle Trace</span>
+          <span className="hidden md:inline">Vehicle Trace</span>
         </button>
 
         {/* Onboard Camera Button */}
@@ -140,13 +175,13 @@ export default function TopBar({
 
         {/* User Session / Logout */}
         <div className="flex items-center gap-2 pl-2 border-l border-white/[0.08]">
-          <div className="hidden md:flex flex-col text-right">
+          <div className="hidden lg:flex flex-col text-right">
             <span className="text-[11px] font-medium text-slate-200">Admin</span>
             <span className="text-[9px] font-mono text-slate-500">SCRB Gujarat</span>
           </div>
           <button
             onClick={onLogout}
-            className="p-1.5 rounded-lg text-slate-400 hover:text-red-400 hover:bg-white/[0.04] transition"
+            className="p-1.5 rounded-lg text-slate-400 hover:text-red-400 hover:bg-white/[0.04] transition cursor-pointer"
             title="Sign out"
           >
             <LogOut className="w-4 h-4" />
@@ -156,3 +191,4 @@ export default function TopBar({
     </header>
   )
 }
+

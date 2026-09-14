@@ -6,6 +6,7 @@ import {
   Popup,
   TileLayer,
   Polyline,
+  Polygon,
   useMap,
 } from 'react-leaflet'
 import 'leaflet/dist/leaflet.css'
@@ -88,36 +89,64 @@ export default function CameraMap({
           )
         })}
 
-      {/* Camera Pins */}
+      {/* Camera Pins and Directional Optical FOV Cones */}
       {(geojson?.features ?? []).map((feature) => {
         const [lon, lat] = feature.geometry.coordinates
         const { id, name, status, vendor } = feature.properties
         const isSelected = selectedId === id
         const color = STATUS_COLOURS[status] ?? '#64748b'
 
+        // Deterministic optical azimuth angle based on camera ID
+        const azimuth = (id * 67) % 360
+        const fovAngle = 60
+        const distanceM = isSelected ? 220 : 140
+        const dLat = distanceM / 111320
+        const dLon = distanceM / (111320 * Math.cos((lat * Math.PI) / 180))
+        const rad1 = ((azimuth - fovAngle / 2) * Math.PI) / 180
+        const rad2 = ((azimuth + fovAngle / 2) * Math.PI) / 180
+        const fovCone = [
+          [lat, lon],
+          [lat + dLat * Math.cos(rad1), lon + dLon * Math.sin(rad1)],
+          [lat + dLat * Math.cos(rad2), lon + dLon * Math.sin(rad2)],
+        ]
+
         return (
           <React.Fragment key={id}>
+            {/* Directional Optical FOV Cone */}
+            {(isSelected || showBuffers) && (
+              <Polygon
+                positions={fovCone}
+                pathOptions={{
+                  color: isSelected ? '#ffffff' : color,
+                  weight: isSelected ? 1.5 : 0.8,
+                  fillColor: isSelected ? '#ffffff' : color,
+                  fillOpacity: isSelected ? 0.18 : 0.08,
+                  dashArray: isSelected ? undefined : '2, 4',
+                }}
+              />
+            )}
+
             {/* Outer ring for selected camera */}
             {isSelected && (
               <CircleMarker
                 center={[lat, lon]}
-                radius={13}
+                radius={14}
                 pathOptions={{
                   color: '#ffffff',
                   fillColor: '#ffffff',
-                  fillOpacity: 0.12,
+                  fillOpacity: 0.15,
                   weight: 1.5,
                 }}
               />
             )}
             <CircleMarker
               center={[lat, lon]}
-              radius={isSelected ? 6 : 4.5}
+              radius={isSelected ? 6.5 : 4.5}
               pathOptions={{
                 color: isSelected ? '#ffffff' : '#08090c',
                 fillColor: color,
                 fillOpacity: 1,
-                weight: isSelected ? 2 : 1.5,
+                weight: isSelected ? 2.5 : 1.5,
               }}
               eventHandlers={{ click: () => onSelect?.(id) }}
             >
@@ -125,7 +154,7 @@ export default function CameraMap({
                 <div className="text-xs space-y-1 font-sans">
                   <div className="font-semibold text-white">{name}</div>
                   <div className="text-[11px] text-slate-400 font-mono">
-                    {vendor || 'Unknown Vendor'} &bull;{' '}
+                    {vendor || 'Generic'} ·{' '}
                     <span
                       className={
                         status === 'active' ? 'text-emerald-400 font-medium' : 'text-rose-400 font-medium'
@@ -133,6 +162,7 @@ export default function CameraMap({
                     >
                       {status}
                     </span>
+                    <span className="text-slate-500 ml-1.5">({azimuth}° AZ)</span>
                   </div>
                 </div>
               </Popup>

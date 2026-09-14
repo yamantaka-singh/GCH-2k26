@@ -28,11 +28,11 @@ export default function CameraDetail({ cameraId }) {
       <p style={{ margin: '4px 0', color: COLOUR[key] }}>{LABEL[key]}
         {health?.latency_ms != null && ` · ${health.latency_ms} ms`}</p>
       <dl style={{ fontSize: 13, display: 'grid', gridTemplateColumns: 'auto 1fr', gap: '2px 8px' }}>
-        <dt>Vendor</dt><dd>{camera.vendor ?? '—'}</dd>
+        <dt>Vendor</dt><dd>{camera.vendor ?? '-'}</dd>
         <dt>Kind</dt><dd>{camera.kind}</dd>
-        <dt>Retention</dt><dd>{camera.retention_days ?? '—'} days</dd>
+        <dt>Retention</dt><dd>{camera.retention_days ?? '-'} days</dd>
         <dt>Coordinates</dt><dd>{camera.lat.toFixed(5)}, {camera.lon.toFixed(5)}</dd>
-        <dt>RTSP</dt><dd style={{ wordBreak: 'break-all' }}>{camera.rtsp_url ?? '—'}</dd>
+        <dt>RTSP</dt><dd style={{ wordBreak: 'break-all' }}>{camera.rtsp_url ?? '-'}</dd>
       </dl>
     </div>
   )

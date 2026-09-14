@@ -103,3 +103,58 @@
 .leaflet-popup-tip {
   background: rgba(13, 16, 23, 0.95) !important;
 }
+
+/* Leaflet Dark Attribution & Controls */
+.leaflet-control-attribution {
+  background: rgba(8, 9, 12, 0.8) !important;
+  color: #64748b !important;
+  font-size: 9px !important;
+  font-family: 'JetBrains Mono', monospace !important;
+  backdrop-filter: blur(8px) !important;
+  border-top-left-radius: 6px !important;
+  border: 1px solid rgba(255, 255, 255, 0.05) !important;
+  padding: 2px 8px !important;
+}
+
+.leaflet-control-attribution a {
+  color: #94a3b8 !important;
+  text-decoration: none !important;
+}
+
+.leaflet-control-attribution a:hover {
+  color: #f8fafc !important;
+}
+
+.leaflet-bar {
+  border: 1px solid rgba(255, 255, 255, 0.08) !important;
+  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.6) !important;
+  border-radius: 10px !important;
+  overflow: hidden !important;
+}
+
+.leaflet-bar a {
+  background-color: rgba(13, 16, 23, 0.9) !important;
+  color: #e2e8f0 !important;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08) !important;
+  backdrop-filter: blur(12px) !important;
+  transition: background-color 0.15s ease, color 0.15s ease !important;
+}
+
+.leaflet-bar a:hover {
+  background-color: rgba(255, 255, 255, 0.1) !important;
+  color: #ffffff !important;
+}
+
+/* Optical Surveillance Filters */
+.filter-optical-normal {
+  filter: contrast(105%) brightness(100%);
+}
+
+.filter-optical-nvg {
+  filter: sepia(100%) hue-rotate(85deg) saturate(320%) contrast(140%) brightness(95%);
+}
+
+.filter-optical-thermal {
+  filter: invert(100%) hue-rotate(180deg) saturate(250%) contrast(160%);
+}
+
