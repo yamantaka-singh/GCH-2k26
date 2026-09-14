@@ -30,19 +30,12 @@ import re
 import sys
 import time
 from pathlib import Path
-from urllib.parse import quote
 
-from dotenv import load_dotenv
+from src.registry.grid import load_credentials, rtsp_url as grid_rtsp_url
 
-GRID_RTSP_HOST = "103.250.160.189:8554"
 VEHICLE_CLASSES = {1: "bicycle", 2: "car", 3: "motorcycle", 5: "bus", 7: "truck"}  # COCO ids
 FIELDS = ["timestamp", "video_time_s", "track_id", "vehicle", "confidence", "x1", "y1", "x2", "y2"]
 MAX_BACKOFF_S = 30
-
-
-def grid_rtsp_url(camera_id: str, email: str, password: str) -> str:
-    """The grid authenticates via credentials in the URL; the email's @ must be %40."""
-    return f"rtsp://{quote(email, safe='')}:{quote(password, safe='')}@{GRID_RTSP_HOST}/stream/{camera_id}"
 
 
 def rows_for_frame(boxes, *, timestamp: dt.datetime, video_time_s: float) -> list[dict]:
@@ -77,11 +70,10 @@ def main() -> int:
         p.error("--seconds is required for a live source; the grid never ends")
     url = args.source
     if is_camera:
-        load_dotenv()
-        email, password = os.environ.get("RTSP_EMAIL"), os.environ.get("RTSP_PASSWORD")
-        if not email or not password:
+        creds = load_credentials()
+        if creds is None:
             p.error("RTSP_EMAIL and RTSP_PASSWORD must be set in .env")
-        url = grid_rtsp_url(args.source, email, password)
+        url = grid_rtsp_url(args.source, *creds)
 
     # UDP across NAT gives corrupt frames that look like model bugs (grid guide, section 3).
     os.environ.setdefault("OPENCV_FFMPEG_CAPTURE_OPTIONS", "rtsp_transport;tcp")

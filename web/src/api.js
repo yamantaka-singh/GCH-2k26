@@ -55,3 +55,6 @@ export function importCsv(departmentId, file) {
 
 export const createCamera = (data) =>
   request('/cameras', { method: 'POST', body: JSON.stringify(data) })
+
+export const fetchLiveUrl = (cameraId) => request(`/cameras/${cameraId}/live-url`)
+export const fetchCameraHealth = (cameraId) => request(`/cameras/${cameraId}/health`)

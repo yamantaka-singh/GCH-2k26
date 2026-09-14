@@ -8,7 +8,7 @@ from psycopg.rows import dict_row
 from pydantic import BaseModel, Field
 
 from . import cameras as camera_queries
-from . import geo, health
+from . import geo, grid, health
 from .auth import authenticate, decode_token, issue_token, may_write
 from .db import pool
 from .importer import import_csv
@@ -150,6 +150,23 @@ def import_cameras(department_id: int = Form(...), file: UploadFile = File(...),
         raise HTTPException(status_code=400, detail=str(exc))
     return {"inserted": result.inserted,
             "errors": [{"line": line, "message": message} for line, message in result.errors]}
+
+
+@app.get("/cameras/{camera_id}/live-url")
+def camera_live_url(camera_id: int, cur=Depends(get_cursor), _=Depends(claims)):
+    """Resolves a registry camera to a real grid stream URL, built server-side
+    so the grid password never ships in the frontend bundle or gets stored in
+    a field the UI displays (camera.rtsp_url is shown in the inspector)."""
+    camera = camera_queries.get_camera(cur, camera_id)
+    if camera is None:
+        raise HTTPException(status_code=404, detail="no such camera")
+    grid_id = grid.grid_camera_id(camera.external_ref)
+    if grid_id is None:
+        raise HTTPException(status_code=404, detail="no live grid feed for this camera")
+    creds = grid.load_credentials()
+    if creds is None:
+        raise HTTPException(status_code=503, detail="grid credentials not configured")
+    return {"whep_url": grid.whep_url(grid_id, *creds)}
 
 
 @app.get("/cameras/{camera_id}/health")

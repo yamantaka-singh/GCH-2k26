@@ -162,3 +162,31 @@ def test_patch_of_missing_camera_returns_404(client):
                             headers=token(client, "dept@gujarat.gov.in"),
                             json={"vendor": "Dahua"})
     assert response.status_code == 404
+
+
+def test_live_url_for_a_grid_camera(client, department, monkeypatch):
+    monkeypatch.setenv("RTSP_EMAIL", "a@b.com")
+    monkeypatch.setenv("RTSP_PASSWORD", "secret")
+    headers = token(client, "dept@gujarat.gov.in")
+    created = client.post("/cameras", headers=headers, json={
+        "department_id": department, "name": "Grid Cam", "lat": 23.0, "lon": 72.0,
+        "external_ref": "cam01",
+    })
+    camera_id = created.json()["id"]
+
+    response = client.get(f"/cameras/{camera_id}/live-url", headers=headers)
+    assert response.status_code == 200
+    assert response.json()["whep_url"] == \
+        "http://a%40b.com:secret@103.250.160.189:8889/stream/cam01/whep"
+
+
+def test_live_url_404s_for_a_non_grid_camera(client, department):
+    headers = token(client, "dept@gujarat.gov.in")
+    created = client.post("/cameras", headers=headers, json={
+        "department_id": department, "name": "Imported Cam", "lat": 23.0, "lon": 72.0,
+        "external_ref": "POL-001",
+    })
+    camera_id = created.json()["id"]
+
+    response = client.get(f"/cameras/{camera_id}/live-url", headers=headers)
+    assert response.status_code == 404

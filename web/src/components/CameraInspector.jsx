@@ -7,18 +7,11 @@ import {
   Check,
   Crosshair,
   RefreshCw,
-  Eye,
   ZoomIn,
-  Shield,
-  Layers,
+  VideoOff,
 } from 'lucide-react'
-
-// Authentic traffic CCTV video clips mapped deterministically
-const VIDEO_FEEDS = [
-  '/videos/traffic_junction_1.mp4',
-  '/videos/traffic_junction_2.mp4',
-  '/videos/traffic_highway_3.mp4',
-]
+import { fetchCameraHealth, fetchLiveUrl } from '../api'
+import { attachWhep } from '../liveFeed'
 
 export default function CameraInspector({
   camera,
@@ -29,20 +22,17 @@ export default function CameraInspector({
 }) {
   const [copied, setCopied] = useState(false)
   const [probing, setProbing] = useState(false)
-  const [simulatedPing, setSimulatedPing] = useState(health?.latency_ms || 22)
+  const [liveHealth, setLiveHealth] = useState(health)
   const [timeStr, setTimeStr] = useState('')
-  const [opticalMode, setOpticalMode] = useState('normal') // 'normal' | 'nvg' | 'thermal'
   const [zoomLevel, setZoomLevel] = useState(1.0) // 1.0 | 1.5 | 2.0
-  const [plateTrack, setPlateTrack] = useState({
-    x: 48,
-    y: 52,
-    plate: 'GJ-01-AB-1234',
-    conf: 98.6,
-  })
+  const [feedError, setFeedError] = useState(null)
 
   const videoRef = useRef(null)
 
-  // Real-time UTC millisecond timecode ticker
+  useEffect(() => setLiveHealth(health), [health])
+
+  // Real-time UTC millisecond timecode ticker -- this is genuinely "now", not
+  // derived from the feed, which loops and carries its own unrelated on-screen clock.
   useEffect(() => {
     const updateTime = () => {
       const now = new Date()
@@ -54,30 +44,25 @@ export default function CameraInspector({
     return () => clearInterval(interval)
   }, [])
 
-  // Dynamic simulated vehicle bounding box track movement across video
+  // Connects to the real grid feed over WebRTC (WHEP) when this camera has
+  // one; otherwise shows an honest "no live feed" state -- never a stock clip.
   useEffect(() => {
-    const plates = ['GJ-01-AB-1234', 'GJ-05-BX-9081', 'GJ-18-CZ-4521', 'GJ-27-K-8812']
-    let step = 0
-    const trackInterval = setInterval(() => {
-      step = (step + 1) % 100
-      const progress = (step % 20) / 20
-      setPlateTrack({
-        x: 35 + progress * 24,
-        y: 42 + Math.sin(progress * Math.PI) * 10,
-        plate: plates[Math.floor(step / 25) % plates.length],
-        conf: +(96.5 + Math.sin(step) * 2.8).toFixed(1),
+    setFeedError(null)
+    if (!camera?.id || !videoRef.current) return undefined
+    let detach = () => {}
+    let cancelled = false
+    fetchLiveUrl(camera.id)
+      .then(({ whep_url }) => {
+        if (!cancelled) detach = attachWhep(videoRef.current, whep_url)
       })
-    }, 400)
-    return () => clearInterval(trackInterval)
+      .catch(() => { if (!cancelled) setFeedError('No live grid feed linked to this camera.') })
+    return () => { cancelled = true; detach() }
   }, [camera?.id])
 
   if (!camera) return null
 
   const dept = (departments || []).find((d) => d.id === camera.department_id)
-  const isOnline = health?.reachable ?? (camera.status === 'active')
-
-  // Deterministic video feed for this camera
-  const videoSrc = VIDEO_FEEDS[Math.abs(camera.id || 1) % VIDEO_FEEDS.length]
+  const isOnline = liveHealth?.reachable ?? (camera.status === 'active')
 
   const copyRtsp = () => {
     if (!camera.rtsp_url) return
@@ -86,19 +71,13 @@ export default function CameraInspector({
     setTimeout(() => setCopied(false), 2000)
   }
 
+  // Re-fetches the real latest health-probe record (src/registry/health.py) --
+  // not a simulated round trip.
   const handleProbe = () => {
     setProbing(true)
-    setTimeout(() => {
-      setSimulatedPing(Math.floor(14 + Math.random() * 12))
-      setProbing(false)
-    }, 600)
-  }
-
-  // Determine optical filter class
-  const getFilterClass = () => {
-    if (opticalMode === 'nvg') return 'filter-optical-nvg'
-    if (opticalMode === 'thermal') return 'filter-optical-thermal'
-    return 'filter-optical-normal'
+    fetchCameraHealth(camera.id)
+      .then(setLiveHealth)
+      .finally(() => setProbing(false))
   }
 
   return (
@@ -129,23 +108,26 @@ export default function CameraInspector({
 
       {/* Content */}
       <div className="flex-1 overflow-y-auto p-3.5 space-y-3">
-        {/* Real Video Surveillance Viewport */}
+        {/* Live Video Surveillance Viewport */}
         <div className="relative aspect-video rounded-xl bg-[#06070a] border border-white/[0.1] overflow-hidden flex flex-col justify-between shadow-2xl">
-          {/* Real Video Player */}
+          {/* WebRTC (WHEP) video player -- srcObject is attached by liveFeed.js
+              once the grid answers; no src= placeholder to avoid implying a feed
+              that may not connect. */}
           <div className="absolute inset-0 overflow-hidden">
             <video
               ref={videoRef}
-              src={videoSrc}
               autoPlay
-              loop
               muted
               playsInline
-              className={`w-full h-full object-cover transition-all duration-300 ${getFilterClass()}`}
-              style={{
-                transform: `scale(${zoomLevel})`,
-                transformOrigin: 'center center',
-              }}
+              className="w-full h-full object-cover transition-all duration-300"
+              style={{ transform: `scale(${zoomLevel})`, transformOrigin: 'center center' }}
             />
+            {feedError && (
+              <div className="absolute inset-0 flex flex-col items-center justify-center gap-2 bg-[#06070a] text-slate-500">
+                <VideoOff className="w-6 h-6" />
+                <span className="text-[10px] font-mono uppercase tracking-wider">{feedError}</span>
+              </div>
+            )}
           </div>
 
           {/* Optical Scanline Texture Overlay */}
@@ -154,11 +136,9 @@ export default function CameraInspector({
           {/* Top Live Video HUD */}
           <div className="relative z-20 p-2.5 flex items-center justify-between text-[10px] font-mono">
             <div className="flex items-center gap-1.5 px-2 py-0.5 rounded bg-black/75 backdrop-blur-md border border-white/[0.1] text-slate-200">
-              <span className="w-1.5 h-1.5 rounded-full bg-rose-500 animate-pulse" />
+              <span className={`w-1.5 h-1.5 rounded-full ${feedError ? 'bg-slate-500' : 'bg-rose-500 animate-pulse'}`} />
               <span className="tracking-widest font-semibold uppercase">
-                {opticalMode === 'normal' && 'LIVE OPTICAL'}
-                {opticalMode === 'nvg' && 'NVG PHOSPHOR'}
-                {opticalMode === 'thermal' && 'FLIR THERMAL'}
+                {feedError ? 'NO FEED' : 'LIVE'}
               </span>
             </div>
             <span className="text-slate-300 bg-black/75 backdrop-blur-md px-2 py-0.5 rounded border border-white/[0.1] tabular-nums text-[9px]">
@@ -166,85 +146,24 @@ export default function CameraInspector({
             </span>
           </div>
 
-          {/* Dynamic Computer Vision ANPR Bounding Box HUD */}
-          <div
-            className="absolute z-20 pointer-events-none transition-all duration-300 ease-out"
-            style={{
-              left: `${plateTrack.x}%`,
-              top: `${plateTrack.y}%`,
-              transform: 'translate(-50%, -50%)',
-            }}
-          >
-            <div className="w-28 h-14 border border-white/70 relative flex items-end justify-center bg-white/[0.04] shadow-lg">
-              {/* Reticle Corner Brackets */}
-              <div className="absolute -top-1 -left-1 w-2 h-2 border-t-2 border-l-2 border-white" />
-              <div className="absolute -top-1 -right-1 w-2 h-2 border-t-2 border-r-2 border-white" />
-              <div className="absolute -bottom-1 -left-1 w-2 h-2 border-b-2 border-l-2 border-white" />
-              <div className="absolute -bottom-1 -right-1 w-2 h-2 border-b-2 border-r-2 border-white" />
-
-              {/* Header Label */}
-              <span className="absolute -top-3.5 left-0 text-[8px] font-mono bg-black/90 text-white px-1 border border-white/30 rounded tracking-wider">
-                ANPR · {plateTrack.conf}%
-              </span>
-
-              {/* License Plate Text */}
-              <span className="text-[9px] font-mono text-white bg-black/95 px-1.5 py-0.5 mb-1 rounded border border-white/30 tracking-widest font-bold">
-                {plateTrack.plate}
-              </span>
-            </div>
-          </div>
-
           {/* Bottom Stream Telemetry Strip */}
           <div className="relative z-20 m-2 flex items-center justify-between text-[9px] font-mono text-slate-300 bg-black/80 backdrop-blur-md px-2.5 py-1 rounded-lg border border-white/[0.1]">
             <span>{camera.resolution || '1080p'} · {camera.fps || 25} FPS</span>
             <span>H.264 / TCP</span>
-            <span className="text-white font-semibold">4.2 Mbps</span>
           </div>
         </div>
 
-        {/* Optical Sensor Controls (Filter Modes & Digital PTZ Zoom) */}
+        {/* Digital Zoom -- a CSS scale on the received video, not physical PTZ control */}
         <div className="p-2.5 rounded-xl bg-white/[0.02] border border-white/[0.06] space-y-2">
-          <div className="flex items-center justify-between text-[10px] font-mono text-slate-400">
-            <span className="flex items-center gap-1.5 uppercase tracking-wider">
-              <Eye className="w-3 h-3 text-slate-300" />
-              <span>Optical Filter</span>
-            </span>
+          <div className="flex items-center justify-end text-[10px] font-mono text-slate-400">
             <span className="flex items-center gap-1.5 uppercase tracking-wider">
               <ZoomIn className="w-3 h-3 text-slate-300" />
-              <span>PTZ Zoom</span>
+              <span>Digital Zoom</span>
             </span>
           </div>
 
-          <div className="flex items-center justify-between gap-2">
-            {/* Filter Toggle Pills */}
-            <div className="flex items-center p-0.5 rounded-lg bg-black/60 border border-white/[0.08] text-[10px] font-mono">
-              <button
-                onClick={() => setOpticalMode('normal')}
-                className={`px-2 py-0.5 rounded transition cursor-pointer ${
-                  opticalMode === 'normal' ? 'bg-white text-zinc-950 font-semibold shadow-sm' : 'text-slate-400 hover:text-white'
-                }`}
-              >
-                NORM
-              </button>
-              <button
-                onClick={() => setOpticalMode('nvg')}
-                className={`px-2 py-0.5 rounded transition cursor-pointer ${
-                  opticalMode === 'nvg' ? 'bg-emerald-500 text-black font-semibold shadow-sm' : 'text-slate-400 hover:text-white'
-                }`}
-              >
-                NVG
-              </button>
-              <button
-                onClick={() => setOpticalMode('thermal')}
-                className={`px-2 py-0.5 rounded transition cursor-pointer ${
-                  opticalMode === 'thermal' ? 'bg-rose-500 text-white font-semibold shadow-sm' : 'text-slate-400 hover:text-white'
-                }`}
-              >
-                FLIR
-              </button>
-            </div>
-
-            {/* PTZ Zoom Toggle Pills */}
+          <div className="flex items-center justify-end gap-2">
+            {/* Zoom Toggle Pills */}
             <div className="flex items-center p-0.5 rounded-lg bg-black/60 border border-white/[0.08] text-[10px] font-mono">
               {[1.0, 1.5, 2.0].map((level) => (
                 <button
@@ -297,7 +216,7 @@ export default function CameraInspector({
               <div>
                 <div className="text-[9px] font-mono text-slate-500 uppercase">Latency</div>
                 <div className="text-xs font-mono font-semibold text-white">
-                  {simulatedPing} ms
+                  {liveHealth?.latency_ms != null ? `${liveHealth.latency_ms} ms` : '--'}
                 </div>
               </div>
             </div>

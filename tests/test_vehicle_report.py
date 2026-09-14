@@ -1,11 +1,6 @@
 import datetime as dt
 
-from scripts.vehicle_detection_report import grid_rtsp_url, rows_for_frame
-
-
-def test_grid_url_percent_encodes_credentials():
-    url = grid_rtsp_url("cam04", "alice@example.com", "AB:CD/EF")
-    assert url == "rtsp://alice%40example.com:AB%3ACD%2FEF@103.250.160.189:8554/stream/cam04"
+from scripts.vehicle_detection_report import rows_for_frame
 
 
 def test_rows_keep_vehicles_only_with_given_timestamp():
