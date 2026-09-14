@@ -10,3 +10,4 @@ data/
 .claude/settings.local.json
 graphify-out/
 docs/*.pdf
+*.pt
