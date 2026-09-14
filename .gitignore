@@ -7,3 +7,6 @@ web/dist/
 .pytest_cache/
 data/
 .DS_Store
+.claude/settings.local.json
+graphify-out/
+docs/*.pdf
