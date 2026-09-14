@@ -1,0 +1,9 @@
+{
+  "type": "object",
+  "required": ["sql", "explanation"],
+  "additionalProperties": false,
+  "properties": {
+    "sql": {"type": "string"},
+    "explanation": {"type": "string"}
+  }
+}

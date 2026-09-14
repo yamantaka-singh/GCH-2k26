@@ -36,7 +36,7 @@ async def run():
 
         print("3. Inspecting Camera Stream & Deep Telemetry Flyout...")
         # Click on the first camera card in the sidebar
-        first_card = page.locator("aside .cursor-pointer").first
+        first_card = page.locator("[data-testid='camera-card']").first
         if await first_card.count() > 0:
             await first_card.click()
             await page.wait_for_timeout(2500)
@@ -49,14 +49,14 @@ async def run():
             await page.wait_for_timeout(2500)
             await page.screenshot(path="demo_media/04_skyfi_satellite_basemap.png")
 
-        # Switch back to Dark Matter
-        dark_btn = page.get_by_role("button", name="Dark Matter")
+        # Switch back to Dark Canvas
+        dark_btn = page.locator("button:has-text('Dark Canvas')")
         if await dark_btn.count() > 0:
             await dark_btn.click()
             await page.wait_for_timeout(1500)
 
         print("5. Toggling PostGIS Spatial Coverage Gaps & Buffers...")
-        gaps_btn = page.get_by_role("button", name="PostGIS Gaps")
+        gaps_btn = page.locator("button:has-text('Gap Grid')")
         if await gaps_btn.count() > 0:
             await gaps_btn.click()
         buffers_btn = page.locator("button:has-text('Buffers')")

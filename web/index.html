@@ -3,21 +3,28 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Sentinel CCTV Registry</title>
+    <title>Sentinel — Unified Geospatial Surveillance Registry | Gujarat Police</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter+Tight:ital,wght@0,300..700;1,300..700&family=JetBrains+Mono:wght@400;500;600&display=swap"
+      rel="stylesheet"
+    />
     <style>
-      /* The layout assumes a light ground (white sidebar, #ddd rules, light OSM
-         tiles). Declaring it stops a dark-themed browser rendering dark text on
-         a dark body. */
-      :root { color-scheme: light; }
+      :root {
+        color-scheme: dark;
+      }
       body {
         margin: 0;
-        background: #fff;
-        color: #111;
-        font: 14px/1.45 system-ui, -apple-system, "Segoe UI", sans-serif;
+        padding: 0;
+        background: #08090c;
+        color: #f8fafc;
+        font-family: 'Inter Tight', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+        overflow: hidden;
       }
     </style>
   </head>
-  <body>
+  <body class="bg-[#08090c] text-slate-100 antialiased selection:bg-white/20 selection:text-white">
     <div id="root"></div>
     <script type="module" src="/src/main.jsx"></script>
   </body>

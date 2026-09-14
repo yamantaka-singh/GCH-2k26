@@ -78,11 +78,11 @@ export default function CameraMap({
               center={[lat, lon]}
               radius={bufferRadius}
               pathOptions={{
-                color: '#06b6d4',
+                color: '#ffffff',
                 weight: 1,
-                fillColor: '#0891b2',
-                fillOpacity: 0.12,
-                dashArray: '4, 4',
+                fillColor: '#ffffff',
+                fillOpacity: 0.04,
+                dashArray: '3, 6',
               }}
             />
           )
@@ -97,38 +97,38 @@ export default function CameraMap({
 
         return (
           <React.Fragment key={id}>
-            {/* Outer glow ring for selected camera */}
+            {/* Outer ring for selected camera */}
             {isSelected && (
               <CircleMarker
                 center={[lat, lon]}
-                radius={14}
+                radius={13}
                 pathOptions={{
-                  color: '#06b6d4',
-                  fillColor: '#22d3ee',
-                  fillOpacity: 0.25,
-                  weight: 2,
+                  color: '#ffffff',
+                  fillColor: '#ffffff',
+                  fillOpacity: 0.12,
+                  weight: 1.5,
                 }}
               />
             )}
             <CircleMarker
               center={[lat, lon]}
-              radius={isSelected ? 7 : 5}
+              radius={isSelected ? 6 : 4.5}
               pathOptions={{
-                color: isSelected ? '#ffffff' : color,
+                color: isSelected ? '#ffffff' : '#08090c',
                 fillColor: color,
-                fillOpacity: 0.95,
-                weight: isSelected ? 2.5 : 1.5,
+                fillOpacity: 1,
+                weight: isSelected ? 2 : 1.5,
               }}
               eventHandlers={{ click: () => onSelect?.(id) }}
             >
               <Popup>
-                <div className="text-xs space-y-1">
-                  <div className="font-bold text-slate-100">{name}</div>
+                <div className="text-xs space-y-1 font-sans">
+                  <div className="font-semibold text-white">{name}</div>
                   <div className="text-[11px] text-slate-400 font-mono">
-                    {vendor || 'Unknown Vendor'} &middot;{' '}
+                    {vendor || 'Unknown Vendor'} &bull;{' '}
                     <span
                       className={
-                        status === 'active' ? 'text-emerald-400 font-semibold' : 'text-amber-400'
+                        status === 'active' ? 'text-emerald-400 font-medium' : 'text-rose-400 font-medium'
                       }
                     >
                       {status}

@@ -175,62 +175,65 @@ export default function App() {
     setSummary(totals)
   }
 
-  // 1. Unauthenticated Login Screen (High-Tech Cyber Command Portal)
+  // 1. Unauthenticated Login Screen (Architectural Security Portal)
   if (!authed) {
     return (
-      <div className="relative w-screen h-screen flex items-center justify-center bg-[#030712] overflow-hidden text-slate-100">
-        {/* Ambient glow backgrounds */}
-        <div className="absolute -top-40 -left-40 w-96 h-96 rounded-full bg-cyan-600/15 blur-3xl" />
-        <div className="absolute -bottom-40 -right-40 w-96 h-96 rounded-full bg-indigo-600/15 blur-3xl" />
-        <div className="absolute inset-0 bg-[linear-gradient(to_right,#0f172a_1px,transparent_1px),linear-gradient(to_bottom,#0f172a_1px,transparent_1px)] bg-[size:2.5rem_2.5rem] opacity-30 pointer-events-none" />
+      <div className="relative w-screen h-screen flex items-center justify-center bg-[#08090c] overflow-hidden text-slate-100 selection:bg-white/20 selection:text-white">
+        {/* Subtle geometric line grid background */}
+        <div className="absolute inset-0 bg-[linear-gradient(to_right,rgba(255,255,255,0.03)_1px,transparent_1px),linear-gradient(to_bottom,rgba(255,255,255,0.03)_1px,transparent_1px)] bg-[size:3rem_3rem] pointer-events-none" />
+        <div className="absolute inset-0 bg-radial-[at_center] from-transparent via-[#08090c]/80 to-[#08090c] pointer-events-none" />
 
-        <div className="w-full max-w-md p-8 glass-panel rounded-3xl relative z-10 border-slate-700/60 shadow-2xl">
-          <div className="flex flex-col items-center text-center mb-6">
-            <div className="w-14 h-14 rounded-2xl bg-cyan-950/80 border border-cyan-500/40 flex items-center justify-center text-cyan-400 mb-3.5 shadow-[0_0_25px_rgba(6,182,212,0.35)]">
-              <Shield className="w-8 h-8" />
+        <div className="w-full max-w-sm p-8 titanium-glass rounded-2xl relative z-10">
+          <div className="flex flex-col items-center text-center mb-8">
+            <div className="w-11 h-11 rounded-xl bg-white/[0.04] border border-white/[0.1] flex items-center justify-center text-white mb-4 shadow-[inset_0_1px_0_0_rgba(255,255,255,0.1)]">
+              <Shield className="w-5 h-5 text-zinc-100" />
             </div>
-            <h1 className="text-xl font-bold tracking-wider bg-gradient-to-r from-cyan-300 via-sky-200 to-indigo-300 bg-clip-text text-transparent">
-              SENTINEL &middot; GIS COMMAND
+            <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-white/[0.04] border border-white/[0.06] text-[10px] font-mono tracking-widest text-slate-400 uppercase mb-2">
+              <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
+              <span>Gujarat Police Command</span>
+            </div>
+            <h1 className="text-xl font-semibold tracking-tight text-white">
+              SENTINEL
             </h1>
             <p className="text-xs text-slate-400 mt-1">
-              Gujarat Police State-Wide CCTV Asset Registry
+              Statewide CCTV Asset Registry & GIS
             </p>
           </div>
 
           <form onSubmit={submit} className="space-y-4">
             <div>
-              <label className="block text-xs font-medium text-slate-300 mb-1.5 flex items-center gap-1.5">
-                <Mail className="w-3.5 h-3.5 text-slate-400" />
-                <span>Operator Email</span>
+              <label className="block text-[11px] font-mono uppercase tracking-wider text-slate-400 mb-1.5 flex items-center gap-1.5">
+                <Mail className="w-3.5 h-3.5 text-slate-500" />
+                <span>Operator Identifier</span>
               </label>
               <input
                 type="email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 placeholder="admin@gujarat.gov.in"
-                className="w-full px-3.5 py-2.5 rounded-xl text-xs glass-input font-mono"
+                className="w-full px-3.5 py-2.5 rounded-xl text-xs titanium-input font-mono"
                 required
               />
             </div>
 
             <div>
-              <label className="block text-xs font-medium text-slate-300 mb-1.5 flex items-center gap-1.5">
-                <Lock className="w-3.5 h-3.5 text-slate-400" />
-                <span>Authorization Token / Password</span>
+              <label className="block text-[11px] font-mono uppercase tracking-wider text-slate-400 mb-1.5 flex items-center gap-1.5">
+                <Lock className="w-3.5 h-3.5 text-slate-500" />
+                <span>Security Token</span>
               </label>
               <input
                 type="password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 placeholder="••••••••"
-                className="w-full px-3.5 py-2.5 rounded-xl text-xs glass-input font-mono"
+                className="w-full px-3.5 py-2.5 rounded-xl text-xs titanium-input font-mono"
                 required
               />
             </div>
 
             {error && (
-              <div className="p-3 rounded-xl bg-rose-950/80 border border-rose-500/50 text-rose-300 text-xs flex items-center gap-2">
-                <AlertCircle className="w-4 h-4 shrink-0" />
+              <div className="p-3 rounded-xl bg-red-950/40 border border-red-500/30 text-red-300 text-xs flex items-center gap-2">
+                <AlertCircle className="w-4 h-4 shrink-0 text-red-400" />
                 <span>{error}</span>
               </div>
             )}
@@ -238,15 +241,15 @@ export default function App() {
             <button
               type="submit"
               disabled={loggingIn}
-              className="w-full mt-2 py-2.5 rounded-xl text-xs font-semibold bg-gradient-to-r from-cyan-600 via-sky-600 to-blue-600 hover:from-cyan-500 hover:to-blue-500 text-white shadow-lg shadow-cyan-950 transition flex items-center justify-center gap-2 border border-cyan-400/30"
+              className="w-full mt-3 py-2.5 rounded-xl text-xs font-semibold bg-white text-zinc-950 hover:bg-zinc-200 active:scale-[0.99] transition-all shadow-[0_4px_20px_rgba(255,255,255,0.1)] flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50"
             >
-              <span>{loggingIn ? 'Authenticating...' : 'Access Command Terminal'}</span>
-              <ArrowRight className="w-4 h-4" />
+              <span>{loggingIn ? 'Authenticating...' : 'Access Intelligence Registry'}</span>
+              <ArrowRight className="w-3.5 h-3.5 text-zinc-900" />
             </button>
           </form>
 
-          <div className="mt-6 pt-4 border-t border-slate-800/80 text-center text-[10px] text-slate-500 font-mono">
-            SECURE ACCESS &middot; POSTGIS 16 &middot; GUJARAT POLICE HACKATHON 2026
+          <div className="mt-8 pt-4 border-t border-white/[0.06] text-center text-[10px] text-slate-500 font-mono tracking-wider uppercase">
+            GPIC 2026 &middot; Model 1 Baseline &middot; PostGIS 16
           </div>
         </div>
       </div>

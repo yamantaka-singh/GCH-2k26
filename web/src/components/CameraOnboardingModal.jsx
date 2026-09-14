@@ -6,8 +6,6 @@ import {
   Plus,
   CheckCircle2,
   AlertCircle,
-  FileText,
-  Download,
 } from 'lucide-react'
 
 export default function CameraOnboardingModal({
@@ -59,50 +57,50 @@ export default function CameraOnboardingModal({
   }
 
   return (
-    <div className="fixed inset-0 z-[2000] flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm animate-in fade-in duration-150">
-      <div className="w-full max-w-lg glass-panel rounded-2xl overflow-hidden shadow-2xl border-slate-700/80 flex flex-col text-slate-100">
+    <div className="fixed inset-0 z-[2000] flex items-center justify-center p-4 bg-black/80 backdrop-blur-md animate-in fade-in duration-150">
+      <div className="w-full max-w-lg titanium-glass rounded-2xl overflow-hidden flex flex-col text-slate-100">
         {/* Modal Header */}
-        <div className="p-4 border-b border-slate-800 flex items-center justify-between bg-slate-950/60">
+        <div className="p-4 border-b border-white/[0.06] flex items-center justify-between">
           <div className="flex items-center gap-2.5">
-            <div className="p-2 rounded-xl bg-cyan-950 text-cyan-400 border border-cyan-500/30">
-              <UploadCloud className="w-5 h-5" />
+            <div className="flex items-center justify-center w-8 h-8 rounded-lg bg-white/[0.04] text-white border border-white/[0.08]">
+              <UploadCloud className="w-4 h-4" />
             </div>
             <div>
-              <h3 className="font-semibold text-sm text-slate-100">
-                Onboard Surveillance Cameras
+              <h3 className="font-semibold text-sm text-white">
+                Onboard Surveillance Nodes
               </h3>
-              <p className="text-[11px] text-slate-400">
-                Model 1 Bulk Ingestion & Asset Registration
+              <p className="text-[11px] font-mono text-slate-400">
+                Model 1 Multi-Department Camera Registration
               </p>
             </div>
           </div>
           <button
             onClick={onClose}
-            className="p-1.5 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800 transition"
+            className="p-1.5 rounded-lg text-slate-400 hover:text-white hover:bg-white/[0.05] transition cursor-pointer"
           >
             <X className="w-4 h-4" />
           </button>
         </div>
 
         {/* Tab Switcher */}
-        <div className="flex items-center border-b border-slate-800 bg-slate-950/30 text-xs font-medium px-4 pt-2">
+        <div className="flex items-center border-b border-white/[0.06] bg-white/[0.01] text-xs font-mono px-4 pt-2">
           <button
             onClick={() => setActiveTab('csv')}
-            className={`pb-2 px-3 border-b-2 transition flex items-center gap-1.5 ${
+            className={`pb-2 px-3 border-b-2 transition flex items-center gap-1.5 uppercase cursor-pointer ${
               activeTab === 'csv'
-                ? 'border-cyan-500 text-cyan-400 font-semibold'
-                : 'border-transparent text-slate-400 hover:text-slate-200'
+                ? 'border-white text-white font-semibold'
+                : 'border-transparent text-slate-500 hover:text-slate-300'
             }`}
           >
             <FileSpreadsheet className="w-3.5 h-3.5" />
-            <span>CSV Bulk Importer</span>
+            <span>CSV Batch Ingest</span>
           </button>
           <button
             onClick={() => setActiveTab('manual')}
-            className={`pb-2 px-3 border-b-2 transition flex items-center gap-1.5 ${
+            className={`pb-2 px-3 border-b-2 transition flex items-center gap-1.5 uppercase cursor-pointer ${
               activeTab === 'manual'
-                ? 'border-cyan-500 text-cyan-400 font-semibold'
-                : 'border-transparent text-slate-400 hover:text-slate-200'
+                ? 'border-white text-white font-semibold'
+                : 'border-transparent text-slate-500 hover:text-slate-300'
             }`}
           >
             <Plus className="w-3.5 h-3.5" />
@@ -116,16 +114,16 @@ export default function CameraOnboardingModal({
             <div className="space-y-4">
               {/* Department Picker */}
               <div>
-                <label className="block text-xs font-medium text-slate-300 mb-1">
+                <label className="block text-[11px] font-mono uppercase tracking-wider text-slate-400 mb-1">
                   Target Department
                 </label>
                 <select
                   value={selectedDept}
                   onChange={(e) => setSelectedDept(Number(e.target.value))}
-                  className="w-full py-2 px-3 rounded-xl text-xs glass-input"
+                  className="w-full py-2 px-3 rounded-xl text-xs titanium-input"
                 >
                   {(departments || []).map((d) => (
-                    <option key={d.id} value={d.id} className="bg-slate-900 text-slate-100">
+                    <option key={d.id} value={d.id} className="bg-[#0e1219] text-white">
                       {d.name} ({d.code})
                     </option>
                   ))}
@@ -133,7 +131,7 @@ export default function CameraOnboardingModal({
               </div>
 
               {/* Dropzone */}
-              <div className="relative border-2 border-dashed border-slate-700 hover:border-cyan-500/80 rounded-2xl p-6 text-center bg-slate-950/40 transition group cursor-pointer">
+              <div className="relative border border-dashed border-white/[0.15] hover:border-white/[0.35] rounded-2xl p-6 text-center bg-white/[0.01] transition group cursor-pointer">
                 <input
                   type="file"
                   accept=".csv"
@@ -141,15 +139,15 @@ export default function CameraOnboardingModal({
                   className="absolute inset-0 opacity-0 cursor-pointer w-full h-full"
                 />
                 <div className="flex flex-col items-center gap-2 pointer-events-none">
-                  <div className="w-12 h-12 rounded-full bg-cyan-950/60 border border-cyan-500/30 flex items-center justify-center text-cyan-400 group-hover:scale-110 transition">
-                    <FileSpreadsheet className="w-6 h-6" />
+                  <div className="w-10 h-10 rounded-full bg-white/[0.04] border border-white/[0.08] flex items-center justify-center text-white transition">
+                    <FileSpreadsheet className="w-5 h-5" />
                   </div>
                   <div>
-                    <span className="text-xs font-semibold text-slate-200">
+                    <span className="text-xs font-semibold text-white">
                       Click to upload or drag & drop CSV
                     </span>
-                    <p className="text-[11px] text-slate-400 mt-0.5">
-                      Required columns: <code>name</code>, <code>lat</code>, <code>lon</code>
+                    <p className="text-[11px] text-slate-400 font-mono mt-0.5">
+                      Required schema: <code>name</code>, <code>lat</code>, <code>lon</code>
                     </p>
                   </div>
                 </div>
@@ -157,14 +155,14 @@ export default function CameraOnboardingModal({
 
               {/* Ingestion Report Feedback */}
               {importReport && (
-                <div className="p-3 rounded-xl bg-slate-950/80 border border-slate-800 space-y-2 text-xs">
-                  <div className="flex items-center gap-2 font-semibold text-emerald-400">
+                <div className="p-3 rounded-xl bg-white/[0.02] border border-white/[0.06] space-y-2 text-xs">
+                  <div className="flex items-center gap-2 font-semibold text-emerald-400 font-mono">
                     <CheckCircle2 className="w-4 h-4" />
                     <span>Imported {importReport.inserted} cameras successfully</span>
                   </div>
                   {importReport.errors?.length > 0 && (
                     <div className="space-y-1 text-rose-300 text-[11px]">
-                      <div className="font-medium text-amber-400 flex items-center gap-1">
+                      <div className="font-medium text-amber-400 flex items-center gap-1 font-mono">
                         <AlertCircle className="w-3 h-3" />
                         <span>{importReport.errors.length} rows rejected (savepoint protected):</span>
                       </div>
@@ -185,36 +183,36 @@ export default function CameraOnboardingModal({
             <form onSubmit={handleManualSubmit} className="space-y-3">
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="block text-[11px] text-slate-400 mb-1">Department</label>
+                  <label className="block text-[11px] font-mono text-slate-400 mb-1 uppercase">Department</label>
                   <select
                     value={selectedDept}
                     onChange={(e) => setSelectedDept(Number(e.target.value))}
-                    className="w-full py-1.5 px-2.5 rounded-xl text-xs glass-input"
+                    className="w-full py-1.5 px-2.5 rounded-xl text-xs titanium-input"
                   >
                     {(departments || []).map((d) => (
-                      <option key={d.id} value={d.id} className="bg-slate-900 text-slate-100">
+                      <option key={d.id} value={d.id} className="bg-[#0e1219] text-white">
                         {d.code} - {d.name}
                       </option>
                     ))}
                   </select>
                 </div>
                 <div>
-                  <label className="block text-[11px] text-slate-400 mb-1">Vendor</label>
+                  <label className="block text-[11px] font-mono text-slate-400 mb-1 uppercase">Vendor</label>
                   <input
                     value={vendor}
                     onChange={(e) => setVendor(e.target.value)}
-                    className="w-full py-1.5 px-2.5 rounded-xl text-xs glass-input"
+                    className="w-full py-1.5 px-2.5 rounded-xl text-xs titanium-input"
                     placeholder="e.g. Hikvision"
                   />
                 </div>
               </div>
 
               <div>
-                <label className="block text-[11px] text-slate-400 mb-1">Camera Location Name</label>
+                <label className="block text-[11px] font-mono text-slate-400 mb-1 uppercase">Camera Location Name</label>
                 <input
                   value={name}
                   onChange={(e) => setName(e.target.value)}
-                  className="w-full py-1.5 px-2.5 rounded-xl text-xs glass-input"
+                  className="w-full py-1.5 px-2.5 rounded-xl text-xs titanium-input"
                   placeholder="e.g. Gandhinagar Highway Junction"
                   required
                 />
@@ -222,41 +220,41 @@ export default function CameraOnboardingModal({
 
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="block text-[11px] text-slate-400 mb-1">Latitude</label>
+                  <label className="block text-[11px] font-mono text-slate-400 mb-1 uppercase">Latitude</label>
                   <input
                     type="number"
                     step="any"
                     value={lat}
                     onChange={(e) => setLat(e.target.value)}
-                    className="w-full py-1.5 px-2.5 rounded-xl text-xs font-mono glass-input"
+                    className="w-full py-1.5 px-2.5 rounded-xl text-xs font-mono titanium-input"
                     required
                   />
                 </div>
                 <div>
-                  <label className="block text-[11px] text-slate-400 mb-1">Longitude</label>
+                  <label className="block text-[11px] font-mono text-slate-400 mb-1 uppercase">Longitude</label>
                   <input
                     type="number"
                     step="any"
                     value={lon}
                     onChange={(e) => setLon(e.target.value)}
-                    className="w-full py-1.5 px-2.5 rounded-xl text-xs font-mono glass-input"
+                    className="w-full py-1.5 px-2.5 rounded-xl text-xs font-mono titanium-input"
                     required
                   />
                 </div>
               </div>
 
               <div>
-                <label className="block text-[11px] text-slate-400 mb-1">RTSP Stream URL</label>
+                <label className="block text-[11px] font-mono text-slate-400 mb-1 uppercase">RTSP Stream URL</label>
                 <input
                   value={rtspUrl}
                   onChange={(e) => setRtspUrl(e.target.value)}
-                  className="w-full py-1.5 px-2.5 rounded-xl text-xs font-mono glass-input"
+                  className="w-full py-1.5 px-2.5 rounded-xl text-xs font-mono titanium-input"
                   placeholder="rtsp://10.20.1.1:554/live"
                 />
               </div>
 
               {manualSuccess && (
-                <div className="p-2 rounded-xl bg-emerald-950/80 text-emerald-300 text-xs flex items-center gap-1.5 border border-emerald-500/40">
+                <div className="p-2 rounded-xl bg-emerald-950/40 text-emerald-300 text-xs flex items-center gap-1.5 border border-emerald-500/30">
                   <CheckCircle2 className="w-4 h-4" />
                   <span>Camera registered successfully!</span>
                 </div>
@@ -264,9 +262,9 @@ export default function CameraOnboardingModal({
 
               <button
                 type="submit"
-                className="w-full mt-2 py-2 rounded-xl text-xs font-semibold bg-cyan-600 hover:bg-cyan-500 text-white transition shadow-lg"
+                className="w-full mt-2 py-2.5 rounded-xl text-xs font-semibold bg-white text-zinc-950 hover:bg-zinc-200 transition shadow cursor-pointer active:scale-[0.99]"
               >
-                Register Camera
+                Register Camera Node
               </button>
             </form>
           )}

@@ -1,15 +1,11 @@
 import React, { useState, useEffect } from 'react'
 import {
-  Car,
+  Compass,
   Play,
   Pause,
   SkipForward,
-  RotateCcw,
-  AlertTriangle,
   Clock,
-  MapPin,
   X,
-  Gauge,
   ShieldAlert,
 } from 'lucide-react'
 
@@ -88,81 +84,81 @@ export default function VehicleTracker({
   const currentSighting = SAMPLE_ROUTE[activeStep - 1] || SAMPLE_ROUTE[0]
 
   return (
-    <div className="fixed bottom-16 left-3 z-[920] w-[370px] glass-panel rounded-2xl p-3.5 flex flex-col gap-3 shadow-2xl border-amber-500/40 animate-in slide-in-from-bottom duration-200">
+    <div className="fixed bottom-16 left-3 z-[920] w-[360px] titanium-glass rounded-2xl p-3.5 flex flex-col gap-3 shadow-2xl animate-in slide-in-from-bottom duration-200">
       {/* Header */}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2">
-          <div className="p-1 rounded-lg bg-amber-500/20 text-amber-400 border border-amber-500/30">
-            <Car className="w-4 h-4" />
+          <div className="flex items-center justify-center w-7 h-7 rounded-lg bg-amber-500/10 text-amber-400 border border-amber-500/20">
+            <Compass className="w-3.5 h-3.5" />
           </div>
           <div>
-            <h3 className="font-semibold text-xs text-slate-100 flex items-center gap-1.5">
-              <span>VEHICLE RE-ID TRAJECTORY</span>
+            <h3 className="font-semibold text-xs text-white uppercase tracking-wider">
+              Vehicle Re-ID Trajectory
             </h3>
-            <span className="text-[10px] font-mono text-amber-300/90">
-              Model 5 Test Scenario Trace
+            <span className="text-[10px] font-mono text-slate-400">
+              Cross-Camera Chronological Scrubber
             </span>
           </div>
         </div>
         <button
           onClick={onClose}
-          className="p-1 rounded-lg text-slate-400 hover:text-white transition"
+          className="p-1 rounded-lg text-slate-400 hover:text-white transition cursor-pointer"
         >
           <X className="w-3.5 h-3.5" />
         </button>
       </div>
 
       {/* Target Plate Query Pill */}
-      <div className="flex items-center gap-2 bg-slate-950/80 p-2 rounded-xl border border-slate-800">
-        <span className="text-[10px] text-slate-400 font-mono">TARGET:</span>
+      <div className="flex items-center gap-2 bg-white/[0.02] p-2 rounded-xl border border-white/[0.06]">
+        <span className="text-[10px] text-slate-500 font-mono uppercase tracking-wider">Target</span>
         <input
           value={plateQuery}
           onChange={(e) => setPlateQuery(e.target.value)}
-          className="bg-transparent text-amber-300 font-mono font-bold text-xs focus:outline-none flex-1"
+          className="bg-transparent text-white font-mono font-semibold text-xs focus:outline-none flex-1 tracking-wider"
         />
-        <span className="text-[9px] px-1.5 py-0.5 rounded bg-emerald-950 text-emerald-400 border border-emerald-500/30">
+        <span className="text-[9px] font-mono px-1.5 py-0.5 rounded bg-white/[0.06] text-slate-300 border border-white/[0.08]">
           4 SIGHTINGS
         </span>
       </div>
 
       {/* Watchlist Hit Alert Banner */}
-      <div className="p-2.5 rounded-xl bg-rose-950/70 border border-rose-500/60 flex items-start gap-2.5 text-rose-200 shadow-[0_0_15px_rgba(244,63,94,0.2)]">
-        <ShieldAlert className="w-4 h-4 text-rose-400 shrink-0 mt-0.5 animate-pulse" />
+      <div className="p-2.5 rounded-xl bg-rose-950/30 border border-rose-500/30 flex items-start gap-2 text-rose-200">
+        <ShieldAlert className="w-4 h-4 text-rose-400 shrink-0 mt-0.5" />
         <div className="text-[11px] leading-snug">
-          <div className="font-bold text-rose-300 uppercase tracking-wide">
-            Automated Watchlist Hit
+          <div className="font-semibold text-rose-300 uppercase tracking-wide text-[10px] font-mono">
+            Watchlist Sighting Confirmed
           </div>
-          <p className="text-rose-200/80 text-[10px] mt-0.5">
-            Hotlist ID #SCRB-9022: Flagged under eGujCop CCTNS. Real-time alert broadcast to district units.
+          <p className="text-rose-200/70 text-[10px] mt-0.5">
+            Hotlist ID #SCRB-9022: eGujCop CCTNS match. Route trajectory triangulated across 4 junctions.
           </p>
         </div>
       </div>
 
       {/* Current Sighting Card */}
-      <div className="p-2.5 rounded-xl bg-slate-950/70 border border-slate-800 space-y-1.5 text-xs">
+      <div className="p-2.5 rounded-xl bg-white/[0.02] border border-white/[0.06] space-y-1.5 text-xs">
         <div className="flex items-center justify-between">
-          <span className="font-mono text-cyan-400 text-[10px]">
-            STOP {currentSighting.step} OF 4 &middot; {currentSighting.city}
+          <span className="font-mono text-slate-300 text-[10px] uppercase tracking-wider">
+            Waypoint {currentSighting.step} of 4 &middot; {currentSighting.city}
           </span>
           <span className="flex items-center gap-1 text-[10px] font-mono text-slate-400">
-            <Clock className="w-3 h-3" />
+            <Clock className="w-3 h-3 text-slate-500" />
             {currentSighting.timestamp}
           </span>
         </div>
-        <div className="font-medium text-slate-100 text-xs truncate">
+        <div className="font-medium text-white text-xs truncate">
           {currentSighting.name}
         </div>
-        <div className="flex items-center justify-between text-[10px] font-mono text-slate-400 pt-1 border-t border-slate-800/60">
-          <span>Est. Velocity: <span className="text-amber-300 font-semibold">{currentSighting.speed}</span></span>
-          <span>ANPR Conf: <span className="text-emerald-400 font-semibold">{currentSighting.confidence}</span></span>
+        <div className="flex items-center justify-between text-[10px] font-mono text-slate-400 pt-1 border-t border-white/[0.04]">
+          <span>Speed: <span className="text-white font-semibold">{currentSighting.speed}</span></span>
+          <span>Confidence: <span className="text-emerald-400 font-semibold">{currentSighting.confidence}</span></span>
         </div>
       </div>
 
       {/* Scrubber Controls */}
       <div className="space-y-1.5 pt-1">
-        <div className="flex items-center justify-between text-[10px] text-slate-400">
-          <span>Timeline Scrubber</span>
-          <span className="font-mono">{activeStep} / 4 Waypoints</span>
+        <div className="flex items-center justify-between text-[10px] font-mono text-slate-400 uppercase">
+          <span>Route Progress</span>
+          <span>{activeStep} / 4 Waypoints</span>
         </div>
         <input
           type="range"
@@ -176,19 +172,17 @@ export default function VehicleTracker({
             const target = SAMPLE_ROUTE[step - 1]
             if (target) onFlyTo(target.lat, target.lon)
           }}
-          className="w-full accent-amber-500 cursor-pointer"
+          className="w-full accent-white cursor-pointer"
         />
 
         {/* Play / Step Buttons */}
         <div className="flex items-center justify-center gap-2 pt-1">
           <button
-            onClick={() => {
-              setIsPlaying(!isPlaying)
-            }}
-            className="flex items-center gap-1.5 px-3 py-1 rounded-lg bg-amber-500/20 hover:bg-amber-500/30 text-amber-300 border border-amber-500/40 text-xs font-medium transition"
+            onClick={() => setIsPlaying(!isPlaying)}
+            className="flex items-center gap-1.5 px-3 py-1 rounded-xl bg-white text-zinc-950 hover:bg-zinc-200 text-xs font-semibold transition cursor-pointer"
           >
-            {isPlaying ? <Pause className="w-3 h-3" /> : <Play className="w-3 h-3" />}
-            <span>{isPlaying ? 'Pause Playback' : 'Auto Playback'}</span>
+            {isPlaying ? <Pause className="w-3 h-3 text-zinc-900" /> : <Play className="w-3 h-3 text-zinc-900" />}
+            <span>{isPlaying ? 'Pause' : 'Play Timeline'}</span>
           </button>
           <button
             onClick={() => {
@@ -197,7 +191,7 @@ export default function VehicleTracker({
               const target = SAMPLE_ROUTE[next - 1]
               if (target) onFlyTo(target.lat, target.lon)
             }}
-            className="p-1 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs transition"
+            className="p-1.5 rounded-xl bg-white/[0.06] hover:bg-white/[0.1] text-white border border-white/[0.08] transition cursor-pointer"
             title="Next Step"
           >
             <SkipForward className="w-3.5 h-3.5" />
