@@ -1,6 +1,8 @@
 import datetime as dt
 
-from scripts.vehicle_detection_report import rows_for_frame
+import numpy as np
+
+from scripts.vehicle_detection_report import draw_hud, rows_for_frame
 
 
 def test_rows_keep_vehicles_only_with_given_timestamp():
@@ -16,3 +18,16 @@ def test_rows_keep_vehicles_only_with_given_timestamp():
     assert (rows[0]["x1"], rows[0]["y2"]) == (10, 90)
     assert rows[0]["track_id"] == 41
     assert rows[1]["track_id"] == ""
+
+
+def test_draw_hud_actually_draws_something():
+    frame = np.full((200, 400, 3), 128, dtype=np.uint8)
+    ts = dt.datetime(2026, 9, 15, 10, 3, 12, tzinfo=dt.timezone.utc)
+    draw_hud(frame, timestamp=ts, counts={"car": 3, "bus": 1})
+    assert not np.array_equal(frame, np.full((200, 400, 3), 128, dtype=np.uint8))
+
+
+def test_draw_hud_handles_no_vehicles_yet():
+    frame = np.full((200, 400, 3), 128, dtype=np.uint8)
+    ts = dt.datetime(2026, 9, 15, 10, 3, 12, tzinfo=dt.timezone.utc)
+    draw_hud(frame, timestamp=ts, counts={})  # must not crash before the first vehicle appears

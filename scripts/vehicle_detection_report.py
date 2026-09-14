@@ -31,6 +31,8 @@ import sys
 import time
 from pathlib import Path
 
+import cv2
+
 from src.registry.grid import load_credentials, rtsp_url as grid_rtsp_url
 
 VEHICLE_CLASSES = {1: "bicycle", 2: "car", 3: "motorcycle", 5: "bus", 7: "truck"}  # COCO ids
@@ -50,6 +52,21 @@ def rows_for_frame(boxes, *, timestamp: dt.datetime, video_time_s: float) -> lis
         for cls, track_id, conf, (x1, y1, x2, y2) in boxes
         if int(cls) in VEHICLE_CLASSES
     ]
+
+
+def draw_hud(frame, *, timestamp: dt.datetime, counts: dict[str, int]):
+    """Burns the wall-clock time and running unique-vehicle count onto the
+    frame -- the analytics deliverable needs both on screen, not just in the
+    CSV a viewer of the video never sees."""
+    count_label = "  ".join(f"{k}:{v}" for k, v in sorted(counts.items())) or "no vehicles yet"
+    lines = [timestamp.strftime("%Y-%m-%d %H:%M:%S %Z"), f"unique vehicles -- {count_label}"]
+    x, y = 12, 28
+    for line in lines:
+        (w, h), _ = cv2.getTextSize(line, cv2.FONT_HERSHEY_SIMPLEX, 0.6, 2)
+        cv2.rectangle(frame, (x - 6, y - h - 6), (x + w + 6, y + 6), (0, 0, 0), -1)
+        cv2.putText(frame, line, (x, y), cv2.FONT_HERSHEY_SIMPLEX, 0.6, (255, 255, 255), 2, cv2.LINE_AA)
+        y += h + 16
+    return frame
 
 
 def main() -> int:
@@ -77,7 +94,6 @@ def main() -> int:
 
     # UDP across NAT gives corrupt frames that look like model bugs (grid guide, section 3).
     os.environ.setdefault("OPENCV_FFMPEG_CAPTURE_OPTIONS", "rtsp_transport;tcp")
-    import cv2
     import torch
     from ultralytics import YOLO
 
@@ -163,6 +179,8 @@ def main() -> int:
                     row_counts[r["vehicle"]] = row_counts.get(r["vehicle"], 0) + 1
 
                 annotated = result.plot()
+                unique_counts = {k: len(v) for k, v in unique_tracks.items()}
+                draw_hud(annotated, timestamp=anchor + dt.timedelta(seconds=offset), counts=unique_counts)
                 if writer is None:
                     size = (annotated.shape[1], annotated.shape[0])
                     writer = cv2.VideoWriter(str(out / "annotated.mp4"),
